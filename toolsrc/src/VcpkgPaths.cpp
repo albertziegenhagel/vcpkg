@@ -342,33 +342,39 @@ namespace vcpkg
         // Note: this will contain a mix of vcvarsall.bat locations and dumpbin.exe locations.
         std::vector<fs::path> paths_examined;
 
+        // TODO: How to choose the required/wanted toolset?
+        const bool with_vs2017 = false;
+
         // VS2017
-        for (const fs::path& instance : vs2017_installation_instances)
+        if(with_vs2017)
         {
-            const fs::path vc_dir = instance / "VC";
-
-            // Skip any instances that do not have vcvarsall.
-            const fs::path vcvarsall_bat = vc_dir / "Auxiliary" / "Build" / "vcvarsall.bat";
-            paths_examined.push_back(vcvarsall_bat);
-            if (!fs.exists(vcvarsall_bat)) continue;
-
-            // Locate the "best" MSVC toolchain version
-            const fs::path msvc_path = vc_dir / "Tools" / "MSVC";
-            std::vector<fs::path> msvc_subdirectories = fs.get_files_non_recursive(msvc_path);
-            Util::unstable_keep_if(msvc_subdirectories, [&fs](const fs::path& path) { return fs.is_directory(path); });
-
-            // Sort them so that latest comes first
-            std::sort(msvc_subdirectories.begin(),
-                      msvc_subdirectories.end(),
-                      [](const fs::path& left, const fs::path& right) { return left.filename() > right.filename(); });
-
-            for (const fs::path& subdir : msvc_subdirectories)
+            for(const fs::path& instance : vs2017_installation_instances)
             {
-                const fs::path dumpbin_path = subdir / "bin" / "HostX86" / "x86" / "dumpbin.exe";
-                paths_examined.push_back(dumpbin_path);
-                if (fs.exists(dumpbin_path))
+                const fs::path vc_dir = instance / "VC";
+
+                // Skip any instances that do not have vcvarsall.
+                const fs::path vcvarsall_bat = vc_dir / "Auxiliary" / "Build" / "vcvarsall.bat";
+                paths_examined.push_back(vcvarsall_bat);
+                if(!fs.exists(vcvarsall_bat)) continue;
+
+                // Locate the "best" MSVC toolchain version
+                const fs::path msvc_path = vc_dir / "Tools" / "MSVC";
+                std::vector<fs::path> msvc_subdirectories = fs.get_files_non_recursive(msvc_path);
+                Util::unstable_keep_if(msvc_subdirectories, [&fs](const fs::path& path) { return fs.is_directory(path); });
+
+                // Sort them so that latest comes first
+                std::sort(msvc_subdirectories.begin(),
+                          msvc_subdirectories.end(),
+                          [](const fs::path& left, const fs::path& right) { return left.filename() > right.filename(); });
+
+                for(const fs::path& subdir : msvc_subdirectories)
                 {
-                    return {dumpbin_path, vcvarsall_bat, L"v141"};
+                    const fs::path dumpbin_path = subdir / "bin" / "HostX86" / "x86" / "dumpbin.exe";
+                    paths_examined.push_back(dumpbin_path);
+                    if(fs.exists(dumpbin_path))
+                    {
+                        return{dumpbin_path, vcvarsall_bat, L"v141"};
+                    }
                 }
             }
         }

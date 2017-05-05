@@ -44,6 +44,13 @@ namespace vcpkg::Build
 
         Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported intel compilervars target %s", cmake_system_name);
     }
+    CWStringView to_intel_compilervars_vstarget(const std::string& msvc_version)
+    {
+        if(msvc_version == "v140") return L"vs2015";
+        //if(msvc_version == "v141") return L"vs2017"; // Not yet supported by Intel
+
+        Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported intel compilervars Visual Studio version  %s", msvc_version);
+    }
 
     struct ArchOption
     {
@@ -112,8 +119,8 @@ namespace vcpkg::Build
         }
 
         // TODO: How to choose the required/wanted toolset?
-        const bool with_intel = false;
-        const bool with_pgi = true;
+        const bool with_intel = true;
+        const bool with_pgi = false;
 
         const auto vs_arch = to_vcvarsall_toolchain(pre_build_info.target_architecture);
         const auto vs_target = to_vcvarsall_target(pre_build_info.cmake_system_name);
@@ -124,17 +131,10 @@ namespace vcpkg::Build
         {
             std::vector<std::wstring> build_env_cmds;
 
-            if(with_intel && toolset.intel)
-            {
-                const auto intel_arch = to_intel_compilervars_toolchain(pre_build_info.target_architecture);
-                const auto intel_target = to_intel_compilervars_target(pre_build_info.cmake_system_name);
-                //const auto intel_vs = L"vs2015";
-
-                //const auto intel_env_cmd = Strings::wformat(LR"("%s" %s %s %s %s 2>&1)", toolset.intel.get()->compilervars.native(), intel_arch, intel_vs, intel_target, tonull);
-                const auto intel_env_cmd = Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.intel.get()->compilervars.native(), intel_arch, intel_target, tonull);
-
-                build_env_cmds.push_back(intel_env_cmd);
-            }
+            // The order here is important:
+            //  - PGI comes before VS because PGI prepends VS2015 (or whatever version has been used during PGI installation) paths 
+            //    to PATH and those should be overwritten by whatever version of VS we really want to use.
+            //  - VS comes before Intel because Intel depends on VS being set already.
 
             if(with_pgi && toolset.pgi)
             {
@@ -157,6 +157,17 @@ namespace vcpkg::Build
             }
 
             build_env_cmds.push_back(vs_env_cmd);
+
+            if(with_intel && toolset.intel)
+            {
+                const auto intel_arch = to_intel_compilervars_toolchain(pre_build_info.target_architecture);
+                const auto intel_target = to_intel_compilervars_target(pre_build_info.cmake_system_name);
+                const auto intel_vs = to_intel_compilervars_vstarget(Strings::to_utf8(toolset.vs.version));
+
+                const auto intel_env_cmd = Strings::wformat(LR"("%s" %s %s %s %s 2>&1)", toolset.intel.get()->compilervars.native(), intel_arch, intel_vs, intel_target, tonull);
+
+                build_env_cmds.push_back(intel_env_cmd);
+            }
 
             return Strings::wformat(L"(%s)", Strings::join(L" && ", build_env_cmds));
         }
