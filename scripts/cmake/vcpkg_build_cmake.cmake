@@ -17,7 +17,8 @@ function(vcpkg_build_cmake)
         list(APPEND MSVC_EXTRA_ARGS "/m")
     endif()
 
-    if(EXISTS ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/build.ninja)
+    if(EXISTS ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/build.ninja OR
+       EXISTS ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/Makefile)
         set(BUILD_ARGS -v) # verbose output
     else()
         set(BUILD_ARGS ${MSVC_EXTRA_ARGS})
