@@ -11,11 +11,11 @@ vcpkg_extract_source_archive(${ARCHIVE})
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
-    PREFER_NMAKE
+    PREFER_NINJA
     OPTIONS -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON
             -DBUILD_TESTING=OFF
-            -DCBLAS=OFF
-            -DLAPACKE=OFF
+            -DCBLAS=ON
+            -DLAPACKE=ON
 )
 
 vcpkg_install_cmake()
