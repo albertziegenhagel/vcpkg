@@ -118,16 +118,14 @@ namespace vcpkg::Build
             tonull = L"";
         }
 
-        // TODO: How to choose the required/wanted toolset?
-        const bool with_intel = true;
-        const bool with_pgi = false;
+        const auto vs_toolset = toolset.vs(pre_build_info.platform_toolset);
 
         const auto vs_arch = to_vcvarsall_toolchain(pre_build_info.target_architecture);
         const auto vs_target = to_vcvarsall_target(pre_build_info.cmake_system_name);
 
-        const auto vs_env_cmd = Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.vs.vcvarsall.native(), vs_arch, vs_target, tonull);
+        const auto vs_env_cmd = Strings::wformat(LR"("%s" %s %s %s 2>&1)", vs_toolset.vcvarsall.native(), vs_arch, vs_target, tonull);
 
-        if(with_intel || with_pgi)
+        if(pre_build_info.use_intel_toolset || pre_build_info.use_pgi_toolset)
         {
             std::vector<std::wstring> build_env_cmds;
 
@@ -136,8 +134,13 @@ namespace vcpkg::Build
             //    to PATH and those should be overwritten by whatever version of VS we really want to use.
             //  - VS comes before Intel because Intel depends on VS being set already.
 
-            if(with_pgi && toolset.pgi)
+            if(pre_build_info.use_pgi_toolset)
             {
+                if(!toolset.pgi)
+                {
+                    Checks::exit_with_message(VCPKG_LINE_INFO, "PGI toolchain was requested but could not be found");
+                }
+
                 if(System::get_host_processor() != System::CPUArchitecture::X64)
                 {
                     Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported PGI toolchain host architecture %s", pre_build_info.target_architecture);
@@ -158,11 +161,16 @@ namespace vcpkg::Build
 
             build_env_cmds.push_back(vs_env_cmd);
 
-            if(with_intel && toolset.intel)
+            if(pre_build_info.use_intel_toolset)
             {
+                if(!toolset.intel)
+                {
+                    Checks::exit_with_message(VCPKG_LINE_INFO, "Intel toolchain was requested but could not be found");
+                }
+
                 const auto intel_arch = to_intel_compilervars_toolchain(pre_build_info.target_architecture);
                 const auto intel_target = to_intel_compilervars_target(pre_build_info.cmake_system_name);
-                const auto intel_vs = to_intel_compilervars_vstarget(Strings::to_utf8(toolset.vs.version));
+                const auto intel_vs = to_intel_compilervars_vstarget(Strings::to_utf8(vs_toolset.version));
 
                 const auto intel_env_cmd = Strings::wformat(LR"("%s" %s %s %s %s 2>&1)", toolset.intel.get()->compilervars.native(), intel_arch, intel_vs, intel_target, tonull);
 
@@ -220,8 +228,8 @@ namespace vcpkg::Build
         const fs::path& git_exe_path = paths.get_git_exe();
 
         const fs::path ports_cmake_script_path = paths.ports_cmake;
-        const Toolset& toolset = paths.get_toolset();
         auto pre_build_info = PreBuildInfo::from_triplet_file(paths, triplet);
+        const Toolset& toolset = paths.get_toolset();
         const auto cmd_set_environment = make_build_env_cmd(pre_build_info, toolset);
 
         const std::wstring cmd_launch_cmake =
@@ -231,7 +239,7 @@ namespace vcpkg::Build
                             {L"PORT", config.src.name},
                             {L"CURRENT_PORT_DIR", config.port_dir / "/."},
                             {L"TARGET_TRIPLET", triplet.canonical_name()},
-                            {L"VCPKG_PLATFORM_TOOLSET", toolset.vs.version},
+                            {L"VCPKG_PLATFORM_TOOLSET", toolset.vs(pre_build_info.platform_toolset).version},
                             {L"VCPKG_USE_HEAD_VERSION", config.use_head_version ? L"1" : L"0"},
                             {L"_VCPKG_NO_DOWNLOADS", config.no_downloads ? L"1" : L"0"},
                             {L"GIT", git_exe_path}});
@@ -416,6 +424,18 @@ namespace vcpkg::Build
             if (variable_name == "VCPKG_PLATFORM_TOOLSET")
             {
                 pre_build_info.platform_toolset = variable_value;
+                continue;
+            }
+
+            if(variable_name == "VCPKG_USE_INTEL_TOOLCHAIN")
+            {
+                pre_build_info.use_intel_toolset = (variable_value == "ON");
+                continue;
+            }
+
+            if(variable_name == "VCPKG_USE_PGI_TOOLCHAIN")
+            {
+                pre_build_info.use_pgi_toolset = (variable_value == "ON");
                 continue;
             }
 

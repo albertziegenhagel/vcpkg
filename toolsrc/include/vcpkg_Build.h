@@ -40,6 +40,8 @@ namespace vcpkg::Build
         std::string cmake_system_name;
         std::string cmake_system_version;
         std::string platform_toolset;
+        bool use_intel_toolset;
+        bool use_pgi_toolset;
     };
 
     std::wstring make_build_env_cmd(const PreBuildInfo& pre_build_info, const Toolset& toolset);

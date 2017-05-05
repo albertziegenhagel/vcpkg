@@ -27,9 +27,14 @@ namespace vcpkg
     };
     struct Toolset
     {
-        VsToolset vs;
+        // Invariant: either vs2017 or vs2015 is not null!
+        Optional<VsToolset> vs2017;
+        Optional<VsToolset> vs2015;
         Optional<IntelToolset> intel;
         Optional<PgiToolset> pgi;
+
+        const VsToolset& default_vs() const;
+        const VsToolset& vs(const std::string& toolset_version) const;
     };
 
     struct VcpkgPaths

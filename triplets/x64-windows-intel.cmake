@@ -1,0 +1,6 @@
+set(VCPKG_TARGET_ARCHITECTURE x64)
+set(VCPKG_CRT_LINKAGE dynamic)
+set(VCPKG_LIBRARY_LINKAGE dynamic)
+
+set(VCPKG_USE_INTEL_TOOLCHAIN ON)
+set(VCPKG_PLATFORM_TOOLSET "v140") # Force VS2015 because intel does not support VS2017 yet

@@ -334,19 +334,16 @@ namespace vcpkg
         return nullopt;
     }
 
-    static VsToolset find_vs_toolset_instance(const VcpkgPaths& paths)
+    static Optional<VsToolset> try_find_vs_toolset_instance(const VcpkgPaths& paths, const std::string& forced_vs_version)
     {
         const auto& fs = paths.get_filesystem();
 
         const std::vector<std::string> vs2017_installation_instances = get_VS2017_installation_instances(paths);
         // Note: this will contain a mix of vcvarsall.bat locations and dumpbin.exe locations.
         std::vector<fs::path> paths_examined;
-
-        // TODO: How to choose the required/wanted toolset?
-        const bool with_vs2017 = false;
-
+        
         // VS2017
-        if(with_vs2017)
+        if(forced_vs_version.empty() || forced_vs_version == "2017")
         {
             for(const fs::path& instance : vs2017_installation_instances)
             {
@@ -373,46 +370,81 @@ namespace vcpkg
                     paths_examined.push_back(dumpbin_path);
                     if(fs.exists(dumpbin_path))
                     {
-                        return{dumpbin_path, vcvarsall_bat, L"v141"};
+                        return VsToolset{dumpbin_path, vcvarsall_bat, L"v141"};
                     }
                 }
             }
         }
 
         // VS2015
-        const Optional<fs::path> vs_2015_installation_instance = get_VS2015_installation_instance();
-        if (auto v = vs_2015_installation_instance.get())
+        if(forced_vs_version.empty() || forced_vs_version == "2015")
         {
-            const fs::path vs2015_vcvarsall_bat = *v / "VC" / "vcvarsall.bat";
-
-            paths_examined.push_back(vs2015_vcvarsall_bat);
-            if (fs.exists(vs2015_vcvarsall_bat))
+            const Optional<fs::path> vs_2015_installation_instance = get_VS2015_installation_instance();
+            if(auto v = vs_2015_installation_instance.get())
             {
-                const fs::path vs2015_dumpbin_exe = *v / "VC" / "bin" / "dumpbin.exe";
-                paths_examined.push_back(vs2015_dumpbin_exe);
-                if (fs.exists(vs2015_dumpbin_exe))
+                const fs::path vs2015_vcvarsall_bat = *v / "VC" / "vcvarsall.bat";
+
+                paths_examined.push_back(vs2015_vcvarsall_bat);
+                if(fs.exists(vs2015_vcvarsall_bat))
                 {
-                    return {vs2015_dumpbin_exe, vs2015_vcvarsall_bat, L"v140"};
+                    const fs::path vs2015_dumpbin_exe = *v / "VC" / "bin" / "dumpbin.exe";
+                    paths_examined.push_back(vs2015_dumpbin_exe);
+                    if(fs.exists(vs2015_dumpbin_exe))
+                    {
+                        return VsToolset{vs2015_dumpbin_exe, vs2015_vcvarsall_bat, L"v140"};
+                    }
                 }
             }
         }
 
-        System::println(System::Color::error, "Could not locate a complete toolset.");
-        System::println("The following paths were examined:");
-        for (const fs::path& path : paths_examined)
-        {
-            System::println("    %s", path.u8string());
-        }
-        Checks::exit_fail(VCPKG_LINE_INFO);
+        return nullopt;
     }
 
     const Toolset& VcpkgPaths::get_toolset() const
     {
         return this->toolset.get_lazy([this]()
         {
-            return Toolset{find_vs_toolset_instance(*this), try_find_intel_toolset_instance(*this), try_find_pgi_toolset_instance(*this)};
+            const auto vs2017_toolset = try_find_vs_toolset_instance(*this, "2017");
+            const auto vs2015_toolset = try_find_vs_toolset_instance(*this, "2015");
+            const auto intel_toolset = try_find_intel_toolset_instance(*this);
+            const auto pgi_toolset = try_find_pgi_toolset_instance(*this);
+
+            if(!vs2017_toolset && !vs2015_toolset)
+            {
+                System::println(System::Color::error, "Could not locate a complete toolset.");
+                //System::println("The following paths were examined:");
+                //for(const fs::path& path : paths_examined)
+                //{
+                //    System::println("    %s", path.u8string());
+                //}
+                Checks::exit_fail(VCPKG_LINE_INFO);
+            }
+
+            return Toolset{vs2017_toolset, vs2015_toolset, intel_toolset, pgi_toolset};
         });
     }
 
     Files::Filesystem& VcpkgPaths::get_filesystem() const { return Files::get_real_filesystem(); }
+
+    const VsToolset& Toolset::default_vs() const
+    {
+        return vs2017 ? *vs2017.get() : *vs2015.get();
+    }
+    const VsToolset& Toolset::vs(const std::string& toolset_version) const
+    {
+        if(toolset_version == "")
+        {
+            return default_vs();
+        }
+        if(toolset_version == "v141" && vs2017.has_value())
+        {
+            return *vs2017.get();
+        }
+        if(toolset_version == "v140" && vs2015.has_value())
+        {
+            return *vs2015.get();
+        }
+
+        Checks::exit_with_message(VCPKG_LINE_INFO, Strings::format("Could not find Visual Studio instance for toolset %s", toolset_version));
+    }
 }
