@@ -794,11 +794,11 @@ namespace vcpkg::PostBuildLint
                 dlls.insert(dlls.cend(), debug_dlls.cbegin(), debug_dlls.cend());
                 dlls.insert(dlls.cend(), release_dlls.cbegin(), release_dlls.cend());
 
-                error_count += check_exports_of_dlls(dlls, toolset.dumpbin);
-                error_count += check_uwp_bit_of_dlls(pre_build_info.cmake_system_name, dlls, toolset.dumpbin);
+                error_count += check_exports_of_dlls(dlls, toolset.vs.dumpbin);
+                error_count += check_uwp_bit_of_dlls(pre_build_info.cmake_system_name, dlls, toolset.vs.dumpbin);
                 error_count += check_dll_architecture(pre_build_info.target_architecture, dlls);
 
-                error_count += check_outdated_crt_linkage_of_dlls(dlls, toolset.dumpbin);
+                error_count += check_outdated_crt_linkage_of_dlls(dlls, toolset.vs.dumpbin);
                 break;
             }
             case LinkageType::BackingEnum::STATIC:
@@ -814,12 +814,12 @@ namespace vcpkg::PostBuildLint
                     error_count += check_crt_linkage_of_libs(
                         BuildType::value_of(ConfigurationTypeC::DEBUG, build_info.crt_linkage),
                         debug_libs,
-                        toolset.dumpbin);
+                        toolset.vs.dumpbin);
                 }
                 error_count +=
                     check_crt_linkage_of_libs(BuildType::value_of(ConfigurationTypeC::RELEASE, build_info.crt_linkage),
                                               release_libs,
-                                              toolset.dumpbin);
+                                              toolset.vs.dumpbin);
                 break;
             }
             case LinkageType::BackingEnum::NULLVALUE:

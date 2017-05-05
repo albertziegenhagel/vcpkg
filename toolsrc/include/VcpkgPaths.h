@@ -5,14 +5,31 @@
 #include "filesystem_fs.h"
 #include "vcpkg_Files.h"
 #include "vcpkg_expected.h"
+#include "vcpkg_optional.h"
 
 namespace vcpkg
 {
-    struct Toolset
+    struct VsToolset
     {
         fs::path dumpbin;
         fs::path vcvarsall;
         CWStringView version;
+    };
+    struct IntelToolset
+    {
+        fs::path compilervars;
+        CWStringView version;
+    };
+    struct PgiToolset
+    {
+        fs::path pgienv;
+        CWStringView version;
+    };
+    struct Toolset
+    {
+        VsToolset vs;
+        Optional<IntelToolset> intel;
+        Optional<PgiToolset> pgi;
     };
 
     struct VcpkgPaths

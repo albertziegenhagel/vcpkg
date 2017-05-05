@@ -35,16 +35,43 @@ namespace vcpkg::Build
         Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported vcvarsall target %s", cmake_system_name);
     }
 
+    CWStringView to_intel_compilervars_target(const std::string& cmake_system_name)
+    {
+        if(cmake_system_name == "") return L"";
+        if(cmake_system_name == "Windows") return L"";
+        if(cmake_system_name == "Android") return L"android";
+        if(cmake_system_name == "Linux") return L"linux";
+
+        Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported intel compilervars target %s", cmake_system_name);
+    }
+
+    struct ArchOption
+    {
+        CWStringView name;
+        System::CPUArchitecture host_arch;
+        System::CPUArchitecture target_arch;
+    };
+
+    template<std::size_t N>
+    CWStringView to_vars_toolchain(const std::string& target_architecture, const std::array<ArchOption, N>& availableOptions)
+    {
+        auto target_arch = System::to_cpu_architecture(target_architecture);
+        auto host_arch = System::get_host_processor();
+
+        for(auto&& option : availableOptions)
+        {
+            if(target_arch == option.target_arch && host_arch == option.host_arch)
+            {
+                return option.name;
+            }
+        }
+
+        Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported toolchain combination %s", target_architecture);
+    }
+
     CWStringView to_vcvarsall_toolchain(const std::string& target_architecture)
     {
         using CPU = System::CPUArchitecture;
-
-        struct ArchOption
-        {
-            CWStringView name;
-            CPU host_arch;
-            CPU target_arch;
-        };
 
         static constexpr ArchOption X86 = {L"x86", CPU::X86, CPU::X86};
         static constexpr ArchOption X86_X64 = {L"x86_x64", CPU::X86, CPU::X64};
@@ -59,18 +86,21 @@ namespace vcpkg::Build
         static constexpr std::array<ArchOption, 8> VALUES = {
             X86, X86_X64, X86_ARM, X86_ARM64, X64, X64_X86, X64_ARM, X64_ARM64};
 
-        auto target_arch = System::to_cpu_architecture(target_architecture);
-        auto host_arch = System::get_host_processor();
+        return to_vars_toolchain(target_architecture, VALUES);
+    }
 
-        for (auto&& value : VALUES)
-        {
-            if (target_arch == value.target_arch && host_arch == value.host_arch)
-            {
-                return value.name;
-            }
-        }
+    CWStringView to_intel_compilervars_toolchain(const std::string& target_architecture)
+    {
+        using CPU = System::CPUArchitecture;
 
-        Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported toolchain combination %s", target_architecture);
+        static constexpr ArchOption X86 = {L"ia32", CPU::X86, CPU::X86};
+        static constexpr ArchOption X86_X64 = {L"ia32_intel64", CPU::X86, CPU::X64};
+
+        static constexpr ArchOption X64 = {L"intel64", CPU::X64, CPU::X64};
+
+        static constexpr std::array<ArchOption, 3> VALUES = {X86, X86_X64, X64};
+
+        return to_vars_toolchain(target_architecture, VALUES);
     }
 
     std::wstring make_build_env_cmd(const PreBuildInfo& pre_build_info, const Toolset& toolset)
@@ -81,10 +111,59 @@ namespace vcpkg::Build
             tonull = L"";
         }
 
-        auto arch = to_vcvarsall_toolchain(pre_build_info.target_architecture);
-        auto target = to_vcvarsall_target(pre_build_info.cmake_system_name);
+        // TODO: How to choose the required/wanted toolset?
+        const bool with_intel = false;
+        const bool with_pgi = true;
 
-        return Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.vcvarsall.native(), arch, target, tonull);
+        const auto vs_arch = to_vcvarsall_toolchain(pre_build_info.target_architecture);
+        const auto vs_target = to_vcvarsall_target(pre_build_info.cmake_system_name);
+
+        const auto vs_env_cmd = Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.vs.vcvarsall.native(), vs_arch, vs_target, tonull);
+
+        if(with_intel || with_pgi)
+        {
+            std::vector<std::wstring> build_env_cmds;
+
+            if(with_intel && toolset.intel)
+            {
+                const auto intel_arch = to_intel_compilervars_toolchain(pre_build_info.target_architecture);
+                const auto intel_target = to_intel_compilervars_target(pre_build_info.cmake_system_name);
+                //const auto intel_vs = L"vs2015";
+
+                //const auto intel_env_cmd = Strings::wformat(LR"("%s" %s %s %s %s 2>&1)", toolset.intel.get()->compilervars.native(), intel_arch, intel_vs, intel_target, tonull);
+                const auto intel_env_cmd = Strings::wformat(LR"("%s" %s %s %s 2>&1)", toolset.intel.get()->compilervars.native(), intel_arch, intel_target, tonull);
+
+                build_env_cmds.push_back(intel_env_cmd);
+            }
+
+            if(with_pgi && toolset.pgi)
+            {
+                if(System::get_host_processor() != System::CPUArchitecture::X64)
+                {
+                    Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported PGI toolchain host architecture %s", pre_build_info.target_architecture);
+                }
+                if(System::to_cpu_architecture(pre_build_info.target_architecture) != System::CPUArchitecture::X64)
+                {
+                    Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported PGI toolchain target architecture %s", pre_build_info.target_architecture);
+                }
+                if(!pre_build_info.cmake_system_name.empty() && pre_build_info.cmake_system_name != "Windows")
+                {
+                    Checks::exit_with_message(VCPKG_LINE_INFO, "Unsupported PGI target %s", pre_build_info.cmake_system_name);
+                }
+
+                const auto pgi_env_cmd = Strings::wformat(LR"("%s" %s 2>&1)", toolset.pgi.get()->pgienv.native(), tonull);
+
+                build_env_cmds.push_back(pgi_env_cmd);
+            }
+
+            build_env_cmds.push_back(vs_env_cmd);
+
+            return Strings::wformat(L"(%s)", Strings::join(L" && ", build_env_cmds));
+        }
+        else
+        {
+            return vs_env_cmd;
+        }
     }
 
     static void create_binary_control_file(const VcpkgPaths& paths,
@@ -141,7 +220,7 @@ namespace vcpkg::Build
                             {L"PORT", config.src.name},
                             {L"CURRENT_PORT_DIR", config.port_dir / "/."},
                             {L"TARGET_TRIPLET", triplet.canonical_name()},
-                            {L"VCPKG_PLATFORM_TOOLSET", toolset.version},
+                            {L"VCPKG_PLATFORM_TOOLSET", toolset.vs.version},
                             {L"VCPKG_USE_HEAD_VERSION", config.use_head_version ? L"1" : L"0"},
                             {L"_VCPKG_NO_DOWNLOADS", config.no_downloads ? L"1" : L"0"},
                             {L"GIT", git_exe_path}});

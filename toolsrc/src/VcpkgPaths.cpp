@@ -269,7 +269,72 @@ namespace vcpkg
         return nullopt;
     }
 
-    static Toolset find_toolset_instance(const VcpkgPaths& paths)
+    static Optional<IntelToolset> try_find_intel_toolset_instance(const VcpkgPaths& paths)
+    {
+        const auto& fs = paths.get_filesystem();
+
+        const std::vector<Optional<std::wstring>> potential_paths = { System::get_environment_variable(L"IFORT_COMPILER16"), System::get_environment_variable(L"ICPP_COMPILER16")};
+
+        std::vector<IntelToolset> intel_instances;
+        for(auto&& path : potential_paths)
+        {
+            if(auto v = path.get())
+            {
+                const fs::path compilervars_bat_path = fs::path(*v) / "bin" / "compilervars.bat";
+                if(fs.exists(compilervars_bat_path))
+                {
+                    auto version = compilervars_bat_path.parent_path().parent_path().parent_path().filename().native();
+                    version = version.substr(version.find_last_of(L'_') + 1);
+                    intel_instances.push_back({compilervars_bat_path, version});
+                }
+            }
+        }
+
+        std::sort(intel_instances.begin(),
+                  intel_instances.end(),
+                  [](const IntelToolset& left, const IntelToolset& right) { return left.version > right.version; });
+
+        if(!intel_instances.empty())
+        {
+            return intel_instances[0];
+        }
+        return nullopt;
+    }
+
+    static Optional<PgiToolset> try_find_pgi_toolset_instance(const VcpkgPaths& paths)
+    {
+        const auto& fs = paths.get_filesystem();
+
+        // TODO: How-to find PGI Root?!
+        const fs::path pgi_root = LR"(C:\Program Files\PGICE)";
+
+        const auto potential_paths = fs.get_files_non_recursive(pgi_root / "win64"); // PGI provides x64 host only
+
+        std::vector<PgiToolset> pgi_instances;
+        for(const auto& path : potential_paths)
+        {
+            if(!fs.is_directory(path)) continue;
+
+            const fs::path pgi_env_bat = path / "pgi_env.bat";
+            if(fs.exists(pgi_env_bat))
+            {
+                const auto version = path.filename().native();
+                pgi_instances.push_back({pgi_env_bat, version});
+            }
+        }
+
+        std::sort(pgi_instances.begin(),
+                  pgi_instances.end(),
+                  [](const PgiToolset& left, const PgiToolset& right) { return left.version > right.version; });
+
+        if(!pgi_instances.empty())
+        {
+            return pgi_instances[0];
+        }
+        return nullopt;
+    }
+
+    static VsToolset find_vs_toolset_instance(const VcpkgPaths& paths)
     {
         const auto& fs = paths.get_filesystem();
 
@@ -337,7 +402,11 @@ namespace vcpkg
 
     const Toolset& VcpkgPaths::get_toolset() const
     {
-        return this->toolset.get_lazy([this]() { return find_toolset_instance(*this); });
+        return this->toolset.get_lazy([this]()
+        {
+            return Toolset{find_vs_toolset_instance(*this), try_find_intel_toolset_instance(*this), try_find_pgi_toolset_instance(*this)};
+        });
     }
+
     Files::Filesystem& VcpkgPaths::get_filesystem() const { return Files::get_real_filesystem(); }
 }
