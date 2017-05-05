@@ -17,8 +17,24 @@ function(vcpkg_build_cmake)
         list(APPEND MSVC_EXTRA_ARGS "/m")
     endif()
 
-    if(EXISTS ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/build.ninja)
+    function(get_cache_variable VAR_NAME CACHE_FILE OUTPUT_VAR)
+        set(PATTERN "^${VAR_NAME}:[A-Z]+=(.+)$")
+        file(STRINGS ${CACHE_FILE} FOUND_LINES REGEX ${PATTERN})
+            
+        foreach(LINE ${FOUND_LINES})
+            if(${LINE} MATCHES ${PATTERN})
+                set(${OUTPUT_VAR} ${CMAKE_MATCH_1} PARENT_SCOPE)
+                break()
+            endif()
+        endforeach()
+    endfunction()
+
+    get_cache_variable("CMAKE_GENERATOR" "${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel/CMakeCache.txt" USED_GENERATOR)
+
+    if(USED_GENERATOR STREQUAL "Ninja")
         set(BUILD_ARGS -v) # verbose output
+    elseif(USED_GENERATOR STREQUAL "NMake Makefiles")
+        set(BUILD_ARGS "")
     else()
         set(BUILD_ARGS ${MSVC_EXTRA_ARGS})
     endif()
