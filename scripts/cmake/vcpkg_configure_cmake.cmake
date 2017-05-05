@@ -1,5 +1,5 @@
 function(vcpkg_configure_cmake)
-    cmake_parse_arguments(_csc "GFORTAN_LINKER" "PREFER_NINJA" "SOURCE_PATH;GENERATOR" "OPTIONS;OPTIONS_DEBUG;OPTIONS_RELEASE" ${ARGN})
+    cmake_parse_arguments(_csc "USE_MINGW;PREFER_NINJA" "SOURCE_PATH;GENERATOR" "OPTIONS;OPTIONS_DEBUG;OPTIONS_RELEASE" ${ARGN})
 
     if(NOT VCPKG_PLATFORM_TOOLSET)
         message(FATAL_ERROR "Vcpkg has been updated with VS2017 support, however you need to rebuild vcpkg.exe by re-running bootstrap-vcpkg.bat\n")
@@ -49,6 +49,11 @@ function(vcpkg_configure_cmake)
         set(ENV{PATH} "$ENV{PATH};${NINJA_PATH}")
     endif()
 
+    if(_csc_USE_MINGW)
+        vcpkg_find_acquire_mingw()
+        set(ENV{PATH} "$ENV{PATH};${MINGW_PATH}")
+    endif()
+
     file(REMOVE_RECURSE ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg)
 
     if(DEFINED VCPKG_CMAKE_SYSTEM_NAME)
@@ -66,8 +71,6 @@ function(vcpkg_configure_cmake)
 
     list(APPEND _csc_OPTIONS
         "-DVCPKG_TARGET_TRIPLET=${TARGET_TRIPLET}"
-        "-DCMAKE_CXX_FLAGS= /DWIN32 /D_WINDOWS /W3 /utf-8 /GR /EHsc /MP"
-        "-DCMAKE_C_FLAGS= /DWIN32 /D_WINDOWS /W3 /utf-8 /MP"
         "-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON"
         "-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON"
         "-DCMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY=ON"
@@ -77,31 +80,42 @@ function(vcpkg_configure_cmake)
         "-DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT_DIR}/scripts/buildsystems/vcpkg.cmake"
         "-DCMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION=ON"
     )
-    if(DEFINED VCPKG_CRT_LINKAGE AND VCPKG_CRT_LINKAGE STREQUAL dynamic)
-        list(APPEND _csc_OPTIONS_DEBUG
-            "-DCMAKE_CXX_FLAGS_DEBUG=/D_DEBUG /MDd /Zi /Ob0 /Od /RTC1"
-            "-DCMAKE_C_FLAGS_DEBUG=/D_DEBUG /MDd /Zi /Ob0 /Od /RTC1"
-        )
-        list(APPEND _csc_OPTIONS_RELEASE
-            "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Oi /Gy /DNDEBUG /Zi"
-            "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Oi /Gy /DNDEBUG /Zi"
-        )
-    elseif(DEFINED VCPKG_CRT_LINKAGE AND VCPKG_CRT_LINKAGE STREQUAL static)
-        list(APPEND _csc_OPTIONS_DEBUG
-            "-DCMAKE_CXX_FLAGS_DEBUG=/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1"
-            "-DCMAKE_C_FLAGS_DEBUG=/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1"
-        )
-        list(APPEND _csc_OPTIONS_RELEASE
-            "-DCMAKE_CXX_FLAGS_RELEASE=/MT /O2 /Oi /Gy /DNDEBUG /Zi"
-            "-DCMAKE_C_FLAGS_RELEASE=/MT /O2 /Oi /Gy /DNDEBUG /Zi"
-        )
-    endif()
+    if(NOT _csc_USE_MINGW)
+        if(DEFINED VCPKG_CRT_LINKAGE AND VCPKG_CRT_LINKAGE STREQUAL dynamic)
+            list(APPEND _csc_OPTIONS_DEBUG
+                "-DCMAKE_CXX_FLAGS_DEBUG=/D_DEBUG /MDd /Zi /Ob0 /Od /RTC1"
+                "-DCMAKE_C_FLAGS_DEBUG=/D_DEBUG /MDd /Zi /Ob0 /Od /RTC1"
+            )
+            list(APPEND _csc_OPTIONS_RELEASE
+                "-DCMAKE_CXX_FLAGS_RELEASE=/MD /O2 /Oi /Gy /DNDEBUG /Zi"
+                "-DCMAKE_C_FLAGS_RELEASE=/MD /O2 /Oi /Gy /DNDEBUG /Zi"
+            )
+        elseif(DEFINED VCPKG_CRT_LINKAGE AND VCPKG_CRT_LINKAGE STREQUAL static)
+            list(APPEND _csc_OPTIONS_DEBUG
+                "-DCMAKE_CXX_FLAGS_DEBUG=/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1"
+                "-DCMAKE_C_FLAGS_DEBUG=/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1"
+            )
+            list(APPEND _csc_OPTIONS_RELEASE
+                "-DCMAKE_CXX_FLAGS_RELEASE=/MT /O2 /Oi /Gy /DNDEBUG /Zi"
+                "-DCMAKE_C_FLAGS_RELEASE=/MT /O2 /Oi /Gy /DNDEBUG /Zi"
+            )
+        endif()
         
-    if(NOT _csc_GFORTAN_LINKER)
+        list(APPEND _csc_OPTIONS
+            "-DCMAKE_CXX_FLAGS= /DWIN32 /D_WINDOWS /W3 /utf-8 /GR /EHsc /MP"
+            "-DCMAKE_C_FLAGS= /DWIN32 /D_WINDOWS /W3 /utf-8 /MP"
+        )
+
         list(APPEND _csc_OPTIONS_RELEASE
             "-DCMAKE_SHARED_LINKER_FLAGS_RELEASE=/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF"
             "-DCMAKE_EXE_LINKER_FLAGS_RELEASE=/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF"
         )
+    # else()
+    #     if(GENERATOR STREQUAL "Ninja")
+    #         list(APPEND _csc_OPTIONS
+    #             "-DCMAKE_NINJA_FORCE_RESPONSE_FILE=ON"
+    #         )
+    #     endif()
     endif()
     
     message(STATUS "Configuring ${TARGET_TRIPLET}-rel")
