@@ -9,24 +9,18 @@ vcpkg_download_distfile(ARCHIVE
 
 vcpkg_extract_source_archive(${ARCHIVE})
 
-# lapack is a fortran library, and visual studio does not include a 
-# fortran compiler. For this reason we download a copy of mingw and 
-# compile lapack with gfortran, and we convert the resulting library 
-# to a visual studio-compatible library using the CMAKE_GNUtoMS option 
-vcpkg_find_acquire_mingw()
-
-# Use a controlled path to avoid incompatibilities with path containing sh.exe 
-set(OLD_PATH $ENV{PATH})
-set(ENV{PATH} "${MINGW_PATH};C:/Windows/System32")
+set(VCVARS_PATH "C:/Program Files (x86)/Microsoft Visual Studio/2017/Professional/VC/Auxiliary/Build/vcvars64.bat")
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
-    GENERATOR "MinGW Makefiles"
-    OPTIONS -DCMAKE_GNUtoMS=ON 
+    USE_MINGW
+    GENERATOR "Ninja"
+    # GENERATOR "MinGW Makefiles"
+    OPTIONS -DCMAKE_GNUtoMS=ON
+            -DCMAKE_GNUtoMS_VCVARS=${VCVARS_PATH}
             -DCBLAS=ON 
             -DLAPACKE=ON 
             -DLAPACKE_WITH_TMG=ON
-    GFORTRAN_LINKER
 )
 
 vcpkg_install_cmake()
@@ -54,6 +48,3 @@ file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
 # Handle copyright
 file(COPY ${SOURCE_PATH}/LICENSE DESTINATION ${CURRENT_PACKAGES_DIR}/share/lapack)
 file(RENAME ${CURRENT_PACKAGES_DIR}/share/lapack/LICENSE ${CURRENT_PACKAGES_DIR}/share/lapack/copyright)
-
-# Restore the original path 
-set(ENV{PATH} ${OLD_PATH})
