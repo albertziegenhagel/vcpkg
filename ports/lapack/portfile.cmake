@@ -3,11 +3,21 @@ set(LAPACK_VERSION "3.7.0")
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/lapack-${LAPACK_VERSION})
 vcpkg_download_distfile(ARCHIVE
     URLS "https://github.com/Reference-LAPACK/lapack/archive/v${LAPACK_VERSION}.zip"
-    FILENAME "v${LAPACK_VERSION}.zip"
+    FILENAME "lapack-v${LAPACK_VERSION}.zip"
     SHA512 7ea3f196f8ec9926072ef8242aabdc24c39065b99d66b71795c07866bf567c72583ccb77504fa0f12277c313d1c1e2c03c4c3cfd67e344bd176d0e36ed6b16e4
 )
 
 vcpkg_extract_source_archive(${ARCHIVE})
+
+vcpkg_apply_patches(
+    SOURCE_PATH ${SOURCE_PATH}
+    PATCHES
+        ${CMAKE_CURRENT_LIST_DIR}/0001-Fix-missing-comma-on-continued-line.patch
+        ${CMAKE_CURRENT_LIST_DIR}/0002-Fix-missing-comma-on-continued-line.patch
+        ${CMAKE_CURRENT_LIST_DIR}/0003-Fix-missing-comma-on-continued-line.patch
+        ${CMAKE_CURRENT_LIST_DIR}/0001-Fix-complex-to-int-conversion.patch
+        ${CMAKE_CURRENT_LIST_DIR}/0001-fixes-some-more-complex-to-int-conversion-in-the-LAP.patch
+)
 
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
