@@ -13,17 +13,17 @@ namespace vcpkg
     {
         fs::path dumpbin;
         fs::path vcvarsall;
-        CWStringView version;
+        std::wstring version;
     };
     struct IntelToolset
     {
         fs::path compilervars;
-        CWStringView version;
+        std::wstring version;
     };
     struct PgiToolset
     {
         fs::path pgienv;
-        CWStringView version;
+        std::wstring version;
     };
     struct Toolset
     {
