@@ -60,12 +60,12 @@ namespace vcpkg::Build
     };
 
     template<std::size_t N>
-    CWStringView to_vars_toolchain(const std::string& target_architecture, const std::array<ArchOption, N>& availableOptions)
+    CWStringView to_vars_toolchain(const std::string& target_architecture, const std::array<ArchOption, N>& available_options)
     {
         auto target_arch = System::to_cpu_architecture(target_architecture);
         auto host_arch = System::get_host_processor();
 
-        for(auto&& option : availableOptions)
+        for(auto&& option : available_options)
         {
             if(target_arch == option.target_arch && host_arch == option.host_arch)
             {

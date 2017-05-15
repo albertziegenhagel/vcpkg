@@ -281,6 +281,7 @@ namespace vcpkg
             if(auto v = path.get())
             {
                 const fs::path compilervars_bat_path = fs::path(*v) / "bin" / "compilervars.bat";
+                Debug::println("Looking for compilervars.bat at %s", compilervars_bat_path.u8string());
                 if(fs.exists(compilervars_bat_path))
                 {
                     auto version = compilervars_bat_path.parent_path().parent_path().parent_path().filename().native();
@@ -316,6 +317,7 @@ namespace vcpkg
             if(!fs.is_directory(path)) continue;
 
             const fs::path pgi_env_bat = path / "pgi_env.bat";
+            Debug::println("Looking for pgi_env.bat at %s", pgi_env_bat.u8string());
             if(fs.exists(pgi_env_bat))
             {
                 const auto version = path.filename().native();
@@ -351,6 +353,7 @@ namespace vcpkg
 
                 // Skip any instances that do not have vcvarsall.
                 const fs::path vcvarsall_bat = vc_dir / "Auxiliary" / "Build" / "vcvarsall.bat";
+                Debug::println("Looking for vcvarsall.bat at %s", vcvarsall_bat.u8string());
                 paths_examined.push_back(vcvarsall_bat);
                 if(!fs.exists(vcvarsall_bat)) continue;
 
@@ -368,6 +371,7 @@ namespace vcpkg
                 {
                     const fs::path dumpbin_path = subdir / "bin" / "HostX86" / "x86" / "dumpbin.exe";
                     paths_examined.push_back(dumpbin_path);
+                    Debug::println("Looking for dumpbin.exe at %s", dumpbin_path.u8string());
                     if(fs.exists(dumpbin_path))
                     {
                         return VsToolset{dumpbin_path, vcvarsall_bat, L"v141"};
@@ -385,9 +389,11 @@ namespace vcpkg
                 const fs::path vs2015_vcvarsall_bat = *v / "VC" / "vcvarsall.bat";
 
                 paths_examined.push_back(vs2015_vcvarsall_bat);
+                Debug::println("Looking for vcvarsall.bat at %s", vs2015_vcvarsall_bat.u8string());
                 if(fs.exists(vs2015_vcvarsall_bat))
                 {
                     const fs::path vs2015_dumpbin_exe = *v / "VC" / "bin" / "dumpbin.exe";
+                    Debug::println("Looking for dumpbin.exe at %s", vs2015_dumpbin_exe.u8string());
                     paths_examined.push_back(vs2015_dumpbin_exe);
                     if(fs.exists(vs2015_dumpbin_exe))
                     {
@@ -412,11 +418,6 @@ namespace vcpkg
             if(!vs2017_toolset && !vs2015_toolset)
             {
                 System::println(System::Color::error, "Could not locate a complete toolset.");
-                //System::println("The following paths were examined:");
-                //for(const fs::path& path : paths_examined)
-                //{
-                //    System::println("    %s", path.u8string());
-                //}
                 Checks::exit_fail(VCPKG_LINE_INFO);
             }
 
