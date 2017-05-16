@@ -306,22 +306,31 @@ namespace vcpkg
     {
         const auto& fs = paths.get_filesystem();
 
-        // TODO: How-to find PGI Root?!
-        const fs::path pgi_root = LR"(C:\Program Files\PGICE)";
+        // Default installation paths for PGI and PGI Community Edition
+        std::vector<fs::path> pgi_roots = {System::get_ProgramFiles_platform_bitness() / L"PGI", System::get_ProgramFiles_platform_bitness() / L"PGICE"};
 
-        const auto potential_paths = fs.get_files_non_recursive(pgi_root / "win64"); // PGI provides x64 host only
+        const auto pgi_root_env = System::get_environment_variable(L"VCPKG_PGI_ROOT");
+        if(pgi_root_env)
+        {
+            pgi_roots.push_back(*pgi_root_env.get());
+        }
 
         std::vector<PgiToolset> pgi_instances;
-        for(const auto& path : potential_paths)
+        for(const fs::path& pgi_root : pgi_roots)
         {
-            if(!fs.is_directory(path)) continue;
+            const auto potential_paths = fs.get_files_non_recursive(pgi_root / "win64"); // on windows PGI provides x64 host only
 
-            const fs::path pgi_env_bat = path / "pgi_env.bat";
-            Debug::println("Looking for pgi_env.bat at %s", pgi_env_bat.u8string());
-            if(fs.exists(pgi_env_bat))
+            for(const auto& path : potential_paths)
             {
-                const auto version = path.filename().native();
-                pgi_instances.push_back({pgi_env_bat, version});
+                if(!fs.is_directory(path)) continue;
+
+                const fs::path pgi_env_bat = path / "pgi_env.bat";
+                Debug::println("Looking for pgi_env.bat at %s", pgi_env_bat.u8string());
+                if(fs.exists(pgi_env_bat))
+                {
+                    const auto version = path.filename().native();
+                    pgi_instances.push_back({pgi_env_bat, version});
+                }
             }
         }
 
