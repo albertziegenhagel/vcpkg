@@ -19,6 +19,8 @@ vcpkg_apply_patches(
         ${CMAKE_CURRENT_LIST_DIR}/0001-fixes-some-more-complex-to-int-conversion-in-the-LAP.patch
 )
 
+vcpkg_enable_fortran()
+
 vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     PREFER_NINJA
