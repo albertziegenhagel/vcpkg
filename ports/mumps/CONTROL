@@ -1,0 +1,4 @@
+Source: mumps
+Version: 5.1.1
+Description: a MUltifrontal Massively Parallel sparse direct Solver
+Build-Depends: reference-lapack, netlib-scalapack, msmpi, parmetis
