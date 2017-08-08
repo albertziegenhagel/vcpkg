@@ -1,0 +1,4 @@
+Source: superludist
+Version: 5.1.3
+Description: SuperLU_DIST is a parallel library for the direct solution of large, sparse, nonsymmetric systems of linear equations for distributed memory machines.
+Build-Depends: reference-lapack, msmpi, parmetis

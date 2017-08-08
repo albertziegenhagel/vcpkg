@@ -1,0 +1,26 @@
+--- a/CMakeLists.txt	Tue Feb 14 06:51:02 2017
++++ b/CMakeLists.txt	Mon Aug 07 18:00:49 2017
+@@ -14,6 +14,8 @@
+ set(VERSION_BugFix "3")
+ set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BugFix})
+ 
++list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
++
+ ######################################################################
+ #
+ # IDEAS: xSDK standards module
+@@ -174,9 +176,11 @@
+   message("-- Will not link with ParMETIS.")
+ endif()
+ 
+-# if(NOT enable_parmetislib)
+-#  find_package(PARMETIS)    ## does not have this Module yet.
+-# endif()
++if(NOT enable_parmetislib)
++ find_package(ParMETIS REQUIRED)
++ set(TPL_PARMETIS_INCLUDE_DIRS "${PARMETIS_INCLUDE_DIRS}")
++ set(PARMETIS_LIB ${PARMETIS_LIBRARIES})
++endif()
+ 
+ 
+ ######################################################################

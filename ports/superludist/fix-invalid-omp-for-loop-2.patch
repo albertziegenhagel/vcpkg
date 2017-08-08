@@ -1,0 +1,58 @@
+--- a/SRC/zSchCompUdt-2Ddynamic.c	Tue Feb 14 06:51:02 2017
++++ b/SRC/zSchCompUdt-2Ddynamic.c	Sun Aug 06 20:29:17 2017
+@@ -102,10 +102,11 @@
+ #endif
+ 
+      /* Loop through the look-ahead blocks to copy Lval into the buffer */
++	 int i;
+ #ifdef __OPENMP
+      /* #pragma omp parallel for -- why not?? Sherry */
+ #endif
+-     for (int i = 0; i < lookAheadBlk; ++i) {
++     for (i = 0; i < lookAheadBlk; ++i) {
+ 	 int StRowDest  = 0;
+ 	 int temp_nbrow;
+ 	 if (i==0) {
+@@ -132,7 +133,7 @@
+ #ifdef _OPENMP
+ #pragma omp parallel for 
+ #endif
+-     for (int i = 0; i < RemainBlk; ++i) {
++     for (i = 0; i < RemainBlk; ++i) {
+ 	 int StRowDest  = 0;
+ 	 int temp_nbrow;
+          if (i==0)  {
+@@ -303,6 +304,7 @@
+  	   Total number of block updates is:
+  	      (# of lookAheadBlk in L(:,k)) X (# of blocks in U(k,:))
+  	*/
++	 int ij;
+ #pragma omp for \
+     private (j,i,lb,rukp,iukp,jb,nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+     schedule(dynamic)
+@@ -311,7 +313,7 @@
+ #endif
+  	/* Each thread is assigned one loop index ij, responsible for 
+  	   block update L(lb,k) * U(k,j) -> tempv[]. */
+-        for (int ij = 0; ij < lookAheadBlk*(nub-jj0); ++ij) {
++        for (ij = 0; ij < lookAheadBlk*(nub-jj0); ++ij) {
+ 	    if ( thread_id == 0 ) tt_start = SuperLU_timer_();
+ 
+             int j   = ij/lookAheadBlk + jj0; /* jj0 was set to 0 */
+@@ -427,6 +429,7 @@
+ 	   Total number of block updates is:
+ 	      (# of RemainBlk in L(:,k)) X (# of blocks in U(k,:))
+ 	*/
++	int ij;
+ #pragma omp for \
+     private (j,i,lb,rukp,iukp,jb,nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+     schedule(dynamic)
+@@ -435,7 +438,7 @@
+ #endif
+ 	/* Each thread is assigned one loop index ij, responsible for 
+ 	   block update L(lb,k) * U(k,j) -> tempv[]. */
+-    for (int ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) { /* jj_cpu := nub */
++    for (ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) { /* jj_cpu := nub */
+ 	int j   = ij / RemainBlk + jj0; 
+ 	int lb  = ij % RemainBlk;
+ 

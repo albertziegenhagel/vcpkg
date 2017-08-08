@@ -1,0 +1,20 @@
+--- a/SRC/psymbfact.c	Fri Oct 21 19:50:33 2016
++++ b/SRC/psymbfact.c	Tue Jan 03 17:09:29 2017
+@@ -1344,8 +1344,15 @@
+   /* setup ptr_toSnd[p] to point to data in snd_aind to be send to 
+    processor p */
+   for (i = 0, j = 0, p = 0; p < nprocs_num; p++) {
+-    if ( p != iam ) 
+-      ptr_toSnd[p] = i;
++    //if ( p != iam ) 
++    //  ptr_toSnd[p] = i;
++    if(p != iam)
++    {
++        int_t* dest = ptr_toSnd;
++        for(int_t ii = 0; ii < p; ++ii)
++            ++dest;
++        *dest = i;
++    }
+     else
+       ptr_toSnd[p] = j;
+     i += nnzToSend[p]; 

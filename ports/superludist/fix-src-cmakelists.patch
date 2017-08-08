@@ -1,0 +1,19 @@
+--- a/SRC/CMakeLists.txt	Tue Feb 14 06:51:02 2017
++++ b/SRC/CMakeLists.txt	Mon Aug 07 18:01:12 2017
+@@ -118,10 +118,14 @@
+ 
+ add_library(superlu_dist ${sources} ${HEADERS})
+ target_link_libraries(superlu_dist
+-                      ${MPI_C_LIBRARIES} ${BLAS_LIB} ${PARMETIS_LIB} m)
++                      ${MPI_C_LIBRARIES} ${BLAS_LIB} ${PARMETIS_LIB})
+ set_target_properties(superlu_dist PROPERTIES
+                       VERSION ${PROJECT_VERSION} SOVERSION ${VERSION_MAJOR}
+ )
+ 
+-install(TARGETS superlu_dist DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(TARGETS superlu_dist
++        RUNTIME DESTINATION bin
++        LIBRARY DESTINATION lib
++        ARCHIVE DESTINATION lib
++)
+ install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
