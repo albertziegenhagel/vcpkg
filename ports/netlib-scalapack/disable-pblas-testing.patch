@@ -1,0 +1,18 @@
+--- a/PBLAS/TESTING/CMakeLists.txt	Tue Nov 08 21:48:31 2011
++++ b/PBLAS/TESTING/CMakeLists.txt	Wed Jan 04 15:54:41 2017
+@@ -29,6 +29,7 @@
+ file(COPY PZBLAS3TST.dat DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+ 
+ 
++if(BUILD_TESTING)
+ add_executable(spb1tst psblas1tst.f ${spbtcom})
+ add_executable(dpb1tst pdblas1tst.f ${dpbtcom})
+ add_executable(cpb1tst pcblas1tst.f ${cpbtcom})
+@@ -58,6 +59,7 @@
+ target_link_libraries(dpb3tst scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+ target_link_libraries(cpb3tst scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+ target_link_libraries(zpb3tst scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++endif()
+ 
+ add_test(spb1tst ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ./spb1tst)
+ add_test(dpb1tst ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ./dpb1tst)

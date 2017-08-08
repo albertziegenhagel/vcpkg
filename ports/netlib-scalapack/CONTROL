@@ -1,0 +1,4 @@
+Source: netlib-scalapack
+Version: 2.0.2
+Description: ScaLAPACK is a library of high-performance linear algebra routines for parallel distributed memory machines
+Build-Depends: reference-lapack, msmpi

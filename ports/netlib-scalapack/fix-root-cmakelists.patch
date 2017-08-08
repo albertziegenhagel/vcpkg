@@ -1,0 +1,169 @@
+--- a/CMakeLists.txt	Wed May 02 04:58:24 2012
++++ b/CMakeLists.txt	Wed Jan 04 16:10:17 2017
+@@ -27,38 +27,38 @@
+ find_package(MPI)
+ if (MPI_FOUND)
+    message(STATUS "Found MPI_LIBRARY : ${MPI_FOUND} ")
+-   INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
++   INCLUDE_DIRECTORIES(${MPI_C_INCLUDE_PATH} ${MPI_Fortran_INCLUDE_PATH})
+ 
+-   find_program(MPI_C_COMPILER
+-      NAMES mpicc
+-      HINTS "${MPI_BASE_DIR}"
+-      PATH_SUFFIXES bin
+-      DOC "MPI C compiler.")
+-   MARK_AS_ADVANCED(MPI_C_COMPILER)
+-   if ("${MPI_C_COMPILER}" STREQUAL "MPI_C_COMPILER-NOTFOUND")
+-      message(ERROR "--> MPI C Compiler NOT FOUND (please set MPI_BASE_DIR accordingly")
+-   else()
+-      message(STATUS "--> MPI C Compiler : ${MPI_C_COMPILER}")
+-      SET(CMAKE_C_COMPILER "${MPI_C_COMPILER}")
+-      message(STATUS "--> C Compiler : ${CMAKE_C_COMPILER}")
+-   endif()
+-   find_program(MPI_Fortran_COMPILER
+-      NAMES mpif77
+-      HINTS "${MPI_BASE_DIR}"
+-      PATH_SUFFIXES bin
+-      DOC "MPI Fortran compiler.")
+-   MARK_AS_ADVANCED(MPI_Fortran_COMPILER)
++  #  find_program(MPI_C_COMPILER
++  #     NAMES mpicc
++  #     HINTS "${MPI_BASE_DIR}"
++  #     PATH_SUFFIXES bin
++  #     DOC "MPI C compiler.")
++  #  MARK_AS_ADVANCED(MPI_C_COMPILER)
++  #  if ("${MPI_C_COMPILER}" STREQUAL "MPI_C_COMPILER-NOTFOUND")
++  #     message(ERROR "--> MPI C Compiler NOT FOUND (please set MPI_BASE_DIR accordingly")
++  #  else()
++  #     message(STATUS "--> MPI C Compiler : ${MPI_C_COMPILER}")
++  #     SET(CMAKE_C_COMPILER "${MPI_C_COMPILER}")
++  #     message(STATUS "--> C Compiler : ${CMAKE_C_COMPILER}")
++  #  endif()
++  #  find_program(MPI_Fortran_COMPILER
++  #     NAMES mpif77
++  #     HINTS "${MPI_BASE_DIR}"
++  #     PATH_SUFFIXES bin
++  #     DOC "MPI Fortran compiler.")
++  #  MARK_AS_ADVANCED(MPI_Fortran_COMPILER)
+    
+    
+ 
+-   if ("${MPI_Fortran_COMPILER}" STREQUAL "MPI_Fortran_COMPILER-NOTFOUND")
+-      message(ERROR "--> MPI Fortran Compiler NOT FOUND (please set MPI_BASE_DIR accordingly")
+-   else()
+-      message(STATUS "--> MPI Fortran Compiler : ${MPI_Fortran_COMPILER}")
+-      SET(Fortran_COMPILER "${CMAKE_Fortran_COMPILER}")
+-      SET(CMAKE_Fortran_COMPILER "${MPI_Fortran_COMPILER}")
+-      message(STATUS "--> Fortran Compiler : ${CMAKE_Fortran_COMPILER}")
+-   endif()
++  #  if ("${MPI_Fortran_COMPILER}" STREQUAL "MPI_Fortran_COMPILER-NOTFOUND")
++  #     message(ERROR "--> MPI Fortran Compiler NOT FOUND (please set MPI_BASE_DIR accordingly")
++  #  else()
++  #     message(STATUS "--> MPI Fortran Compiler : ${MPI_Fortran_COMPILER}")
++  #     SET(Fortran_COMPILER "${CMAKE_Fortran_COMPILER}")
++  #     SET(CMAKE_Fortran_COMPILER "${MPI_Fortran_COMPILER}")
++  #     message(STATUS "--> Fortran Compiler : ${CMAKE_Fortran_COMPILER}")
++  #  endif()
+    
+ else()
+    message(STATUS "Found MPI_LIBRARY : ${MPI_FOUND} ")
+@@ -85,7 +85,7 @@
+   install(TARGETS ${lib} EXPORT scalapack-targets
+     ARCHIVE DESTINATION lib${LIB_SUFFIX}
+     LIBRARY DESTINATION lib${LIB_SUFFIX}
+-    RUNTIME DESTINATION Testing
++    RUNTIME DESTINATION bin
+   )
+ endmacro()
+ 
+@@ -93,14 +93,14 @@
+ # Testing
+ SET(DART_TESTING_TIMEOUT 600)
+ 
+-enable_testing()
++# enable_testing()
+ include(CTest)
+-enable_testing()
++# enable_testing()
+ # --------------------------------------------------
+ 
+ # Organize output files.  On Windows this also keeps .dll files next
+ # to the .exe files that need them, making tests easy to run.
+-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SCALAPACK_BINARY_DIR}/TESTING)
++set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SCALAPACK_BINARY_DIR}/bin)
+ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SCALAPACK_BINARY_DIR}/lib)
+ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${SCALAPACK_BINARY_DIR}/lib)
+ 
+@@ -118,11 +118,17 @@
+ #
+ #   Fortran Mangling, MPI Tests and BLACS settings
+ #
+-include(FortranMangling)
+-COMPILE(install_COMPILED)
++# include(FortranMangling)
++# COMPILE(install_COMPILED)
+ 
+-FORTRAN_MANGLING(CDEFS)
+-#MESSAGE(STATUS "Setting CDEFS = ${CDEFS}")
++# FORTRAN_MANGLING(CDEFS)
++include(FortranCInterface)
++if(FortranCInterface_GLOBAL_CASE STREQUAL "UPPER")
++  set(CDEFS "UpCase")
++elseif(FortranCInterface_GLOBAL_SUFFIX STREQUAL "_")
++  set(CDEFS "Add_")
++endif()
++MESSAGE(STATUS "Setting CDEFS = ${CDEFS}")
+ #set(CDEFS ${CDEFS} CACHE STRING "Fortran Mangling" FORCE)
+ MESSAGE(STATUS "=========")
+ 
+@@ -232,18 +238,20 @@
+ 
+ if (UNIX)
+    add_library(scalapack ${blacs} ${tools} ${tools-C} ${extra_lapack} ${pblas} ${pblas-F} ${ptzblas} ${ptools} ${pbblas} ${redist} ${src} ${src-C})
+-   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_C_LIBRARIES} ${MPI_Fortran_LIBRARIES})
+    scalapack_install_library(scalapack)
+ else (UNIX) # Need to separate Fortran and C Code
+    OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON )
++   add_library(scalapack-F STATIC ${pblas-F} ${pbblas} ${ptzblas} ${tools} ${src} ${extra_lapack} )
+    add_library(scalapack ${blacs} ${tools-C} ${pblas} ${ptools} ${redist} ${src-C})
+-   target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+-   add_library(scalapack-F ${pblas-F} ${pbblas} ${ptzblas} ${tools} ${src} ${extra_lapack} )
+-   target_link_libraries( scalapack-F ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++   target_link_libraries( scalapack scalapack-F ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_C_LIBRARIES} ${MPI_Fortran_LIBRARIES})
++   set_target_properties(scalapack PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    scalapack_install_library(scalapack)
+    scalapack_install_library(scalapack-F)
+ endif (UNIX)
+-add_subdirectory(TESTING)
++if(BUILD_TESTING)
++  add_subdirectory(TESTING)
++endif()
+ 
+ # --------------------------------------------------
+ # CPACK Packaging 
+@@ -278,7 +286,11 @@
+ # --------------------------------------------------
+ 
+ 
+-export(TARGETS scalapack FILE scalapack-targets.cmake)
++if (UNIX)
++  export(TARGETS scalapack FILE scalapack-targets.cmake)
++else()
++  export(TARGETS scalapack scalapack-F FILE scalapack-targets.cmake)
++endif()
+ 
+ if( NOT LAPACK_FOUND )
+  install(FILES
+@@ -303,9 +315,9 @@
+ install(FILES
+   ${SCALAPACK_BINARY_DIR}/CMakeFiles/scalapack-config.cmake
+   ${SCALAPACK_BINARY_DIR}/scalapack-config-version.cmake
+-  DESTINATION lib/cmake/scalapack-${SCALAPACK_VERSION}
++  DESTINATION share/scalapack
+   )
+ 
+ install(EXPORT scalapack-targets
+-  DESTINATION lib/cmake/scalapack-${SCALAPACK_VERSION})
++  DESTINATION share/scalapack)
+ 

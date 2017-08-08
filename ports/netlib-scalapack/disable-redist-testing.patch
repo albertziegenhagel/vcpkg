@@ -1,0 +1,18 @@
+--- a/REDIST/TESTING/CMakeLists.txt	Tue Nov 08 21:48:31 2011
++++ b/REDIST/TESTING/CMakeLists.txt	Wed Jan 04 15:55:34 2017
+@@ -3,6 +3,7 @@
+ file(COPY GEMR2D.dat DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+ file(COPY TRMR2D.dat DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+ 
++if(BUILD_TESTING)
+ add_executable(xigemr pigemrdrv.c)
+ add_executable(xsgemr psgemrdrv.c)
+ add_executable(xdgemr pdgemrdrv.c)
+@@ -26,6 +27,7 @@
+ target_link_libraries(xdtrmr scalapack )
+ target_link_libraries(xctrmr scalapack )
+ target_link_libraries(xztrmr scalapack )
++endif()
+ 
+ #add_test(xigemr ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ./xigemr)
+ #add_test(xsgemr ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ./xsgemr)

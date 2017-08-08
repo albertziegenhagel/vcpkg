@@ -1,0 +1,19 @@
+--- a/PBLAS/TIMING/CMakeLists.txt	Tue Nov 08 21:48:31 2011
++++ b/PBLAS/TIMING/CMakeLists.txt	Wed Jan 04 15:54:45 2017
+@@ -28,7 +28,7 @@
+ file(COPY PZBLAS2TIM.dat DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+ file(COPY PZBLAS3TIM.dat DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+ 
+-
++if(BUILD_TESTING)
+ add_executable(spb1tim psblas1tim.f ${spbtcom})
+ add_executable(dpb1tim pdblas1tim.f ${dpbtcom})
+ add_executable(cpb1tim pcblas1tim.f ${cpbtcom})
+@@ -58,6 +58,7 @@
+ target_link_libraries(dpb3tim scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+ target_link_libraries(cpb3tim scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+ target_link_libraries(zpb3tim scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
++endif()
+ 
+ add_test(spb1tim ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ./spb1tim)
+ add_test(dpb1tim ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 4 ./dpb1tim)
