@@ -1,0 +1,4 @@
+Source: petsc
+Version: 3.7.4
+Description: Portable, Extensible Toolkit for Scientific Computation
+Build-Depends: reference-lapack, msmpi, hypre, superludist, mumps, metis, parmetis

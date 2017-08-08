@@ -1,0 +1,4 @@
+static const char *petscmachineinfo = "@PETSC_MACHINE_INFO@";
+static const char *petsccompilerinfo = "@PETSC_COMPILER_INFO@";
+static const char *petsccompilerflagsinfo = "@PETSC_COMPILER_FLAGS_INFO@";
+static const char *petsclinkerinfo = "@PETSC_LINKER_INFO@";

@@ -1,0 +1,44 @@
+#-----------------------------------------------------------------------------
+#
+# PETSCConfig.cmake - PETSC CMake configuration file for external projects.
+#
+# This file is configured by PETSC and used by the UsePETSC.cmake module
+# to load PETSC's settings for an external project.
+
+@PACKAGE_INIT@
+
+get_filename_component(PETSC_CONFIG_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include("${PETSC_CONFIG_DIR}/PETSCExports.cmake")
+
+set(PETSC_VERSION_MAJOR                   "@PROJECT_VERSION_MAJOR@")
+set(PETSC_VERSION_MINOR                   "@PROJECT_VERSION_MINOR@")
+set(PETSC_VERSION_PATCH                   "@PROJECT_VERSION_PATCH@")
+set(PETSC_VERSION                         "${PETSC_VERSION_MAJOR}.${PETSC_VERSION_MINOR}.${PETSC_VERSION_PATCH}")
+
+set_and_check(PETSC_INCLUDE_DIR           "@PACKAGE_PETSC_INCLUDE_INSTALL_DIR@")
+
+get_property(PETSC_LIBRARY_TYPE           TARGET PETSC::petsc PROPERTY TYPE)
+
+if(${PETSC_LIBRARY_TYPE} MATCHES "STATIC_LIBRARY")
+  get_property(PETSC_LIBRARY          TARGET PETSC::petsc PROPERTY LOCATION_RELEASE)
+  get_property(PETSC_LIBRARY_DEBUG    TARGET PETSC::petsc PROPERTY LOCATION_DEBUG)
+elseif(${PETSC_LIBRARY_TYPE} MATCHES "SHARED_LIBRARY")
+  if(WIN32)
+    get_property(PETSC_LIBRARY        TARGET PETSC::petsc PROPERTY IMPORTED_IMPLIB_RELEASE)
+    get_property(PETSC_LIBRARY_DEBUG  TARGET PETSC::petsc PROPERTY IMPORTED_IMPLIB_DEBUG)
+  else()
+    get_property(PETSC_LIBRARY        TARGET PETSC::petsc PROPERTY LOCATION_RELEASE)
+    get_property(PETSC_LIBRARY_DEBUG  TARGET PETSC::petsc PROPERTY LOCATION_DEBUG)
+  endif()
+endif()
+
+if(PETSC_LIBRARY)
+  list(APPEND PETSC_LIBRARIES                    "optimized;${PETSC_LIBRARY}")
+endif()
+if(PETSC_LIBRARY_DEBUG)
+  list(APPEND PETSC_LIBRARIES                    "debug;${PETSC_LIBRARY_DEBUG}")
+endif()
+
+#list(APPEND PAUNT_3RD_PARTY_LIBRARIES            "${PAUNT_${component}_3RD_PARTY_LIBRARIES}")
+
+check_required_components("@PROJECT_NAME@")
