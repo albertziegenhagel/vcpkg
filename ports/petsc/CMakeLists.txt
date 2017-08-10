@@ -1889,7 +1889,6 @@ if (PETSC_USE_SINGLE_LIBRARY)
     # add_library (petsc ${PETSC_C_CXX_SRCS})
     # target_link_libraries (petsc petsc_f)
 
-    message("CMAKE_C_STANDARD_LIBRARIES: ${CMAKE_C_STANDARD_LIBRARIES}")
     add_library (petsc ${PETSCSYS_SRCS} ${PETSCVEC_SRCS} ${PETSCMAT_SRCS} ${PETSCDM_SRCS} ${PETSCKSP_SRCS} ${PETSCSNES_SRCS} ${PETSCTS_SRCS} ${PETSCTAO_SRCS})
 
     install (TARGETS petsc
