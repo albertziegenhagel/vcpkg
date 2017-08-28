@@ -81,6 +81,22 @@ vcpkg_execute_required_process(
 set(SOURCE_INCLUDE_PATH "${SOURCE_PATH}/sdk/PFiles/Microsoft SDKs/MPI/Include")
 set(SOURCE_LIB_PATH "${SOURCE_PATH}/sdk/PFiles/Microsoft SDKs/MPI/Lib")
 
+if(VCPKG_FORTRAN_COMPILER STREQUAL "GNU")
+    if(${TRIPLET_SYSTEM_ARCH} STREQUAL "x86")
+        set(INT_PTR_KIND 4)
+    else()
+        set(INT_PTR_KIND 8)
+    endif()
+
+    file(READ "${SOURCE_INCLUDE_PATH}/mpif.h" MPIF_H_CONTENT)
+    string(REPLACE "INT_PTR_KIND()" "${INT_PTR_KIND}" MPIF_H_CONTENT "${MPIF_H_CONTENT}")
+    file(WRITE "${SOURCE_INCLUDE_PATH}/mpif.h" "${MPIF_H_CONTENT}")
+
+    file(READ "${SOURCE_INCLUDE_PATH}/mpi.f90" MPI_F90_CONTENT)
+    string(REPLACE "INT_PTR_KIND()" "${INT_PTR_KIND}" MPI_F90_CONTENT "${MPI_F90_CONTENT}")
+    file(WRITE "${SOURCE_INCLUDE_PATH}/mpi.f90" "${MPI_F90_CONTENT}")
+endif()
+
 # Install include files
 file(INSTALL
         "${SOURCE_INCLUDE_PATH}/mpi.h"
@@ -113,7 +129,7 @@ endif()
 
 # Install debug libraries
 # NOTE: since the binary distribution does not include any debug libraries we simply install the release libraries
-SET(VCPKG_POLICY_ONLY_RELEASE_CRT enabled)
+set(VCPKG_POLICY_ONLY_RELEASE_CRT enabled)
 file(INSTALL
         "${SOURCE_LIB_PATH}/${TRIPLET_SYSTEM_ARCH}/msmpi.lib"
         "${SOURCE_LIB_PATH}/${TRIPLET_SYSTEM_ARCH}/msmpifec.lib"

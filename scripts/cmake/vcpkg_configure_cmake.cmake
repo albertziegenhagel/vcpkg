@@ -156,6 +156,7 @@ function(vcpkg_configure_cmake)
     if(VCPKG_FORTRAN_ENABLED AND DEFINED VCPKG_FORTRAN_COMPILER AND VCPKG_FORTRAN_COMPILER STREQUAL GNU)
         list(APPEND _csc_OPTIONS
             "-DCMAKE_GNUtoMS=ON"
+            "-DCMAKE_Fortran_FLAGS=-fno-range-check"
         )
     else()
         list(APPEND _csc_OPTIONS
