@@ -47,6 +47,11 @@ if(MUMPS_USE_PARMETIS)
   list(APPEND MUMPS_DEFINITIONS -Dparmetis)
 endif()
 
+if(WIN32 AND MINGW)
+  find_package(Threads REQUIRED)
+  list(APPEND MUMPS_3RD_PARTY_LIBS Threads::Threads)
+endif()
+
 # =============================================================================
 # Sources
 # =============================================================================
