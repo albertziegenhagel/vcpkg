@@ -1,0 +1,35 @@
+--- a/CMakeLists.txt	Mon Aug 21 15:36:41 2017
++++ b/CMakeLists.txt	Mon Aug 28 18:11:22 2017
+@@ -236,11 +236,12 @@
+ append_subdir_files(src "SRC")
+ append_subdir_files(src-C "SRC")
+ 
+-if (UNIX)
++OPTION(SCALAPACK_SEPARATE_FORTRAN_LIBS "Build fortran libraries into separate lib" OFF)
++if (NOT SCALAPACK_SEPARATE_FORTRAN_LIBS)
+    add_library(scalapack ${blacs} ${tools} ${tools-C} ${extra_lapack} ${pblas} ${pblas-F} ${ptzblas} ${ptools} ${pbblas} ${redist} ${src} ${src-C})
+    target_link_libraries( scalapack ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES} ${MPI_C_LIBRARIES} ${MPI_Fortran_LIBRARIES})
+    scalapack_install_library(scalapack)
+-else (UNIX) # Need to separate Fortran and C Code
++else () # Need to separate Fortran and C Code
+    OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON )
+    add_library(scalapack-F STATIC ${pblas-F} ${pbblas} ${ptzblas} ${tools} ${src} ${extra_lapack} )
+    add_library(scalapack ${blacs} ${tools-C} ${pblas} ${ptools} ${redist} ${src-C})
+@@ -248,7 +249,7 @@
+    set_target_properties(scalapack PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    scalapack_install_library(scalapack)
+    scalapack_install_library(scalapack-F)
+-endif (UNIX)
++endif ()
+ if(BUILD_TESTING)
+   add_subdirectory(TESTING)
+ endif()
+@@ -286,7 +287,7 @@
+ # --------------------------------------------------
+ 
+ 
+-if (UNIX)
++if (NOT SCALAPACK_SEPARATE_FORTRAN_LIBS)
+   export(TARGETS scalapack FILE scalapack-targets.cmake)
+ else()
+   export(TARGETS scalapack scalapack-F FILE scalapack-targets.cmake)

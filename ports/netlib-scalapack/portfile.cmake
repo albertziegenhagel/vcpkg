@@ -14,6 +14,7 @@ vcpkg_apply_patches(
         ${CMAKE_CURRENT_LIST_DIR}/disable-pblas-testing.patch
         ${CMAKE_CURRENT_LIST_DIR}/disable-pblas-timing-testing.patch
         ${CMAKE_CURRENT_LIST_DIR}/disable-redist-testing.patch
+        ${CMAKE_CURRENT_LIST_DIR}/disable-building-fortran-to-separate-lib.patch
 )
 
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/FindMPI.cmake DESTINATION ${SOURCE_PATH}/CMAKE)
