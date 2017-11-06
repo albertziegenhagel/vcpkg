@@ -25,6 +25,7 @@ vcpkg_configure_cmake(
     SOURCE_PATH ${SOURCE_PATH}
     PREFER_NINJA
     OPTIONS
+        -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON
         -DBUILD_TESTING=OFF
 )
 
