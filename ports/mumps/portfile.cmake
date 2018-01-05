@@ -1,11 +1,11 @@
 include(vcpkg_common_functions)
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/MUMPS_5.1.1)
+set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/MUMPS_5.1.2)
 vcpkg_download_distfile(ARCHIVE
     URLS
-        "http://mumps.enseeiht.fr/MUMPS_5.1.1.tar.gz"
-        "http://graal.ens-lyon.fr/MUMPS/MUMPS_5.1.1.tar.gz"
-    FILENAME "MUMPS_5.1.1.tar.gz"
-    SHA512 145dd61c9164bc50d07c2baf48345a2aca200332c4e359ea8b5b64fbb2027a6556f622a5620585b4852f785ba8e210267585c53634564f712828add2939901a9
+        "http://mumps.enseeiht.fr/MUMPS_5.1.2.tar.gz"
+        "http://graal.ens-lyon.fr/MUMPS/MUMPS_5.1.2.tar.gz"
+    FILENAME "MUMPS_5.1.2.tar.gz"
+    SHA512 38a63b14a8df835be68b5fa310b39aa1815799220d56c176e4005797800959e9e08c9a6bf11d308ab82ea40b6f34d36072cebe7c1de39e0c314eb138b93f1b74
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
