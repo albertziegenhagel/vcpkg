@@ -1,12 +1,12 @@
 include(vcpkg_common_functions)
 
-set(LAPACK_VERSION "3.7.1")
+set(LAPACK_VERSION "3.8.0")
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO "Reference-LAPACK/lapack"
     REF "v${LAPACK_VERSION}"
-    SHA512 84fab803ee7535dcc7e32b1e7ca3d0bab1e427f715f360a2e7ccb2d529d857c95d20ef83ab3783e30f6e4c3e7407bc4546fc8245d8c31e5879a2dbd60b3ca91f
+    SHA512 17786cb7306fccdc9b4a242de7f64fc261ebe6a10b6ec55f519deb4cb673cb137e8742aa5698fd2dc52f1cd56d3bd116af3f593a01dcf6770c4dcc86c50b2a7f
     HEAD_REF "master"
 )
 
@@ -15,6 +15,7 @@ vcpkg_apply_patches(
     PATCHES
         ${CMAKE_CURRENT_LIST_DIR}/fix-include-order.patch
         ${CMAKE_CURRENT_LIST_DIR}/fix-try-compile-fortran-flags.patch
+        ${CMAKE_CURRENT_LIST_DIR}/fix-unresolved-symbol.patch
 )
 
 vcpkg_enable_fortran()
