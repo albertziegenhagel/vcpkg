@@ -1,0 +1,509 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 437306d..102f976 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -88,6 +88,20 @@ option(enable_examples  "Build examples" ON)
+ option(TPL_PARMETIS_LIBRARIES "List of absolute paths to ParMETIS link libraries [].")
+ option(TPL_PARMETIS_INCLUDE_DIRS "List of absolute paths to ParMETIS include directories [].")
+ 
++if(NOT WIN32)
++  include(GNUInstallDirs)
++  set(default_install_inc_dir ${CMAKE_INSTALL_INCLUDEDIR})
++  set(default_install_lib_dir ${CMAKE_INSTALL_LIBDIR})
++  set(default_install_bin_dir ${CMAKE_INSTALL_BINDIR})
++else()
++  set(default_install_inc_dir "include")
++  set(default_install_lib_dir "lib")
++  set(default_install_bin_dir "bin")
++endif()
++
++set(INSTALL_INC_DIR "${default_install_inc_dir}" CACHE STRING "The folder where headers will be installed.")
++set(INSTALL_LIB_DIR "${default_install_lib_dir}" CACHE STRING "The folder where libraries will be installed.")
++set(INSTALL_BIN_DIR "${default_install_bin_dir}" CACHE STRING "The folder where runtime files will be installed.")
+ 
+ # setup required compiler defines and options.
+ ## get_directory_property( DirDefs COMPILE_DEFINITIONS )
+diff --git a/EXAMPLE/CMakeLists.txt b/EXAMPLE/CMakeLists.txt
+index 2ecb368..9c6f461 100644
+--- a/EXAMPLE/CMakeLists.txt
++++ b/EXAMPLE/CMakeLists.txt
+@@ -1,7 +1,10 @@
+ include_directories(${SuperLU_DIST_SOURCE_DIR}/SRC)
+ 
+ # Libs linked to all of the examples
+-set(all_link_libs superlu_dist ${BLAS_LIB} m)
++set(all_link_libs superlu_dist ${BLAS_LIB})
++if(NOT WIN32)
++  list(APPEND all_link_libs m)
++endif()
+ 
+ function(add_superlu_dist_example target input nprow npcol)
+     set(EXAMPLE_INPUT "${SuperLU_DIST_SOURCE_DIR}/EXAMPLE/${input}")
+diff --git a/SRC/CMakeLists.txt b/SRC/CMakeLists.txt
+index 36b55d1..32d676c 100644
+--- a/SRC/CMakeLists.txt
++++ b/SRC/CMakeLists.txt
+@@ -122,19 +122,26 @@ endif()
+ 
+ add_library(superlu_dist ${sources} ${HEADERS})
+ target_link_libraries(superlu_dist
+-                      ${MPI_C_LIBRARIES} ${BLAS_LIB} ${PARMETIS_LIB} m)
++                      ${MPI_C_LIBRARIES} ${BLAS_LIB} ${PARMETIS_LIB})
++if(NOT WIN32)
++  target_link_libraries(superlu_dist m)
++endif()
+ set_target_properties(superlu_dist PROPERTIES
+                       VERSION ${PROJECT_VERSION} SOVERSION ${VERSION_MAJOR}
+ )
+ 
+-# Define GNU standard installation directories
+-include(GNUInstallDirs)
++target_compile_definitions(superlu_dist PRIVATE SUPERLU_DIST_EXPORTS)
++if(WIN32 AND BUILD_SHARED_LIBS)
++  set_target_properties(superlu_dist PROPERTIES
++                        WINDOWS_EXPORT_ALL_SYMBOLS ON
++  )
++endif()
+ 
+ install(TARGETS superlu_dist
+-# DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+-     DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
++    LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
++    ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
+ )
+ install(FILES ${headers}
+-# DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+-)
++  DESTINATION "${INSTALL_INC_DIR}"
++)
+\ No newline at end of file
+diff --git a/SRC/dSchCompUdt-2Ddynamic.c b/SRC/dSchCompUdt-2Ddynamic.c
+index 7b15a06..4d1c45d 100644
+--- a/SRC/dSchCompUdt-2Ddynamic.c
++++ b/SRC/dSchCompUdt-2Ddynamic.c
+@@ -306,10 +306,11 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+      tt_start = SuperLU_timer_();
+ 
+      /* Loop through the look-ahead blocks to copy Lval into the buffer */
++	 int i;
+ #ifdef _OPENMP
+ #pragma omp parallel for private(j,jj,tempu,tempv) default (shared)
+ #endif
+-     for (int i = 0; i < lookAheadBlk; ++i) {
++     for (i = 0; i < lookAheadBlk; ++i) {
+ 	 int StRowDest, temp_nbrow;
+ 	 if ( i==0 ) {
+ 	     StRowDest = 0;
+@@ -428,6 +429,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ 	   int* indirect_thread    = indirect + (ldt + CACHELINE/i) * thread_id;
+ 	   int* indirect2_thread   = indirect2 + (ldt + CACHELINE/i) * thread_id;
+ 
++	   int ij;
+ #pragma omp for \
+     private (nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+     schedule(dynamic)
+@@ -438,7 +440,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ #endif
+ 	   /* Each thread is assigned one loop index ij, responsible for 
+ 	      block update L(lb,k) * U(k,j) -> tempv[]. */
+-	   for (int ij = 0; ij < lookAheadBlk*(nub-jj0); ++ij) {
++	   for (ij = 0; ij < lookAheadBlk*(nub-jj0); ++ij) {
+ 	       /* jj0 starts after look-ahead window. */
+             int j   = ij/lookAheadBlk + jj0;
+             int lb  = ij%lookAheadBlk;
+@@ -621,6 +623,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ 	    int* indirect_thread = indirect + (ldt + CACHELINE/i) * thread_id;
+ 	    int* indirect2_thread = indirect2 + (ldt + CACHELINE/i) * thread_id;
+ 
++	    int ij;
+ #pragma omp for \
+     private (j,lb,rukp,iukp,jb,nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+     schedule(dynamic)
+@@ -631,7 +634,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ #endif
+ 	    /* Each thread is assigned one loop index ij, responsible for 
+ 	       block update L(lb,k) * U(k,j) -> tempv[]. */
+-	    for (int ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) {
++	    for (ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) {
+ 		/* jj_cpu := nub, jj0 starts after look-ahead window. */
+ 		int j   = ij / RemainBlk + jj0; /* j-th block in U panel */
+ 		int lb  = ij % RemainBlk;       /* lb-th block in L panel */
+diff --git a/SRC/dcomplex.h b/SRC/dcomplex.h
+index 7c69b0f..f5beac8 100644
+--- a/SRC/dcomplex.h
++++ b/SRC/dcomplex.h
+@@ -26,6 +26,8 @@ at the top-level directory.
+ 
+ #include <mpi.h>
+ 
++#include "superlu_defs.h"
++
+ typedef struct { double r, i; } doublecomplex;
+ 
+ /*
+@@ -33,7 +35,7 @@ typedef struct { double r, i; } doublecomplex;
+  * and double complex. I'm too lazy to declare
+  * these guys external in every file that needs them.
+  */
+-extern MPI_Datatype SuperLU_MPI_DOUBLE_COMPLEX;
++extern SUPERLU_DIST_EXPORT MPI_Datatype SuperLU_MPI_DOUBLE_COMPLEX;
+ 
+ 
+ /* Macro definitions */
+diff --git a/SRC/pdgstrf2.c b/SRC/pdgstrf2.c
+index 118fc20..c1de889 100644
+--- a/SRC/pdgstrf2.c
++++ b/SRC/pdgstrf2.c
+@@ -385,7 +385,9 @@ void pdgstrs2_omp
+         for (j = 0; j < nsupc_temp[b]; j++) {
+             segsize = klst - usub[iukp++];
+ 	    if (segsize) {
++#ifndef _MSC_VER
+ #pragma omp task default(shared) firstprivate(segsize,rukp) if (segsize > 30)
++#endif
+ 		{ /* Nonzero segment. */
+ 		    int_t luptr = (knsupc - segsize) * (nsupr + 1);
+ 		    //printf("[2] segsize %d, nsupr %d\n", segsize, nsupr);
+diff --git a/SRC/psymbfact.c b/SRC/psymbfact.c
+index 8410f15..5d73521 100644
+--- a/SRC/psymbfact.c
++++ b/SRC/psymbfact.c
+@@ -1343,8 +1343,11 @@ symbfact_distributeMatrix
+ 
+   /* setup ptr_toSnd[p] to point to data in snd_aind to be send to 
+    processor p */
++#ifdef _MSC_VER
++#pragma loop(no_vector)
++#endif
+   for (i = 0, j = 0, p = 0; p < nprocs_num; p++) {
+-    if ( p != iam ) 
++    if ( p != iam )
+       ptr_toSnd[p] = i;
+     else
+       ptr_toSnd[p] = j;
+diff --git a/SRC/pzgstrf2.c b/SRC/pzgstrf2.c
+index e95eed3..8408f54 100644
+--- a/SRC/pzgstrf2.c
++++ b/SRC/pzgstrf2.c
+@@ -386,7 +386,9 @@ void pzgstrs2_omp
+         for (j = 0; j < nsupc_temp[b]; j++) {
+             segsize = klst - usub[iukp++];
+ 	    if (segsize) {
++#ifndef _MSC_VER
+ #pragma omp task default(shared) firstprivate(segsize,rukp) if (segsize > 30)
++#endif
+ 		{ /* Nonzero segment. */
+ 		    int_t luptr = (knsupc - segsize) * (nsupr + 1);
+ 		    //printf("[2] segsize %d, nsupr %d\n", segsize, nsupr);
+diff --git a/SRC/superlu_defs.h b/SRC/superlu_defs.h
+index 1d3c191..9bc6620 100644
+--- a/SRC/superlu_defs.h
++++ b/SRC/superlu_defs.h
+@@ -230,6 +230,18 @@ at the top-level directory.
+ #define VT_TRACEOFF
+ #endif
+ 
++#ifndef SUPERLU_DIST_EXPORT
++#if WIN32
++#ifdef SUPERLU_DIST_EXPORTS
++#define SUPERLU_DIST_EXPORT __declspec(dllexport)
++#else
++#define SUPERLU_DIST_EXPORT __declspec(dllimport)
++#endif /* SUPERLU_DIST_EXPORTS */
++#else
++#define SUPERLU_DIST_EXPORT
++#endif /* WIN32 */
++#endif /* SUPERLU_DIST_EXPORT */
++
+ 
+ /***********************************************************************
+  * New data types
+diff --git a/SRC/zSchCompUdt-2Ddynamic.c b/SRC/zSchCompUdt-2Ddynamic.c
+index 9b91168..6e3cc01 100644
+--- a/SRC/zSchCompUdt-2Ddynamic.c
++++ b/SRC/zSchCompUdt-2Ddynamic.c
+@@ -305,10 +305,11 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+      tt_start = SuperLU_timer_();
+ 
+      /* Loop through the look-ahead blocks to copy Lval into the buffer */
++    int i;
+ #ifdef _OPENMP
+ #pragma omp parallel for private(j,jj,tempu,tempv) default (shared)
+ #endif
+-     for (int i = 0; i < lookAheadBlk; ++i) {
++     for (i = 0; i < lookAheadBlk; ++i) {
+ 	 int StRowDest, temp_nbrow;
+ 	 if ( i==0 ) {
+ 	     StRowDest = 0;
+@@ -349,7 +350,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ #pragma omp parallel for private(i,j,jj,tempu,tempv) default (shared) \
+     schedule(SCHEDULE_STRATEGY)
+ #endif
+-     for (int i = 0; i < RemainBlk; ++i) {
++     for (i = 0; i < RemainBlk; ++i) {
+          int StRowDest, temp_nbrow;
+          if ( i==0 )  {
+ 	     StRowDest  = 0;
+@@ -427,6 +428,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ 	   int* indirect_thread    = indirect + (ldt + CACHELINE/i) * thread_id;
+ 	   int* indirect2_thread   = indirect2 + (ldt + CACHELINE/i) * thread_id;
+ 
++	   int ij;
+ #pragma omp for \
+     private (nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+     schedule(dynamic)
+@@ -437,7 +439,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ #endif
+ 	   /* Each thread is assigned one loop index ij, responsible for 
+ 	      block update L(lb,k) * U(k,j) -> tempv[]. */
+-	   for (int ij = 0; ij < lookAheadBlk*(nub-jj0); ++ij) {
++	   for (ij = 0; ij < lookAheadBlk*(nub-jj0); ++ij) {
+ 	       /* jj0 starts after look-ahead window. */
+             int j   = ij/lookAheadBlk + jj0;
+             int lb  = ij%lookAheadBlk;
+@@ -620,6 +622,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ 	    int* indirect_thread = indirect + (ldt + CACHELINE/i) * thread_id;
+ 	    int* indirect2_thread = indirect2 + (ldt + CACHELINE/i) * thread_id;
+ 
++	    int ij;
+ #pragma omp for \
+     private (j,lb,rukp,iukp,jb,nsupc,ljb,lptr,ib,temp_nbrow,cum_nrow)	\
+     schedule(dynamic)
+@@ -630,7 +633,7 @@ if ( msg0 && msg2 ) { /* L(:,k) and U(k,:) are not empty. */
+ #endif
+ 	    /* Each thread is assigned one loop index ij, responsible for 
+ 	       block update L(lb,k) * U(k,j) -> tempv[]. */
+-	    for (int ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) {
++	    for (ij = 0; ij < RemainBlk*(jj_cpu-jj0); ++ij) {
+ 		/* jj_cpu := nub, jj0 starts after look-ahead window. */
+ 		int j   = ij / RemainBlk + jj0; /* j-th block in U panel */
+ 		int lb  = ij % RemainBlk;       /* lb-th block in L panel */
+diff --git a/TEST/CMakeLists.txt b/TEST/CMakeLists.txt
+index 460824a..e720368 100644
+--- a/TEST/CMakeLists.txt
++++ b/TEST/CMakeLists.txt
+@@ -1,7 +1,10 @@
+ include_directories(${SuperLU_DIST_SOURCE_DIR}/SRC)
+ 
+ # Libs linked to all of the tests
+-set(all_link_libs superlu_dist ${BLAS_LIB} m)
++set(all_link_libs superlu_dist ${BLAS_LIB})
++if(NOT WIN32)
++  list(APPEND all_link_libs m)
++endif()
+ 
+ set(MATRICES ../EXAMPLE/g20.rua)  # sample sparse matrix from a file
+ set(NPROWS 1 2)		  # process rows
+@@ -69,6 +72,9 @@ endfunction(add_superlu_dist_tests)
+ 
+ if(enable_double)
+   set(DTEST pdtest.c dcreate_matrix.c pdcompute_resid.c)
++  if(WIN32)
++    list(APPEND DTEST win32/setenv.c win32/getopt.c)
++  endif()
+   add_executable(pdtest ${DTEST})
+   target_link_libraries(pdtest ${all_link_libs})
+   add_superlu_dist_tests(pdtest g20.rua)
+diff --git a/TEST/pdtest.c b/TEST/pdtest.c
+index 7666e5a..79cb6f6 100644
+--- a/TEST/pdtest.c
++++ b/TEST/pdtest.c
+@@ -25,8 +25,13 @@ at the top-level directory.
+  */
+ #include <stdio.h>
+ #include <stdlib.h>
++#ifndef WIN32
+ #include <unistd.h>
+ #include <getopt.h>
++#else
++#include "win32/getopt.h"
++#include "win32/setenv.h"
++#endif /* WIN32 */
+ #include <math.h>
+ #include "superlu_ddefs.h"
+ 
+diff --git a/TEST/pztest.c b/TEST/pztest.c
+index dadb503..610428e 100644
+--- a/TEST/pztest.c
++++ b/TEST/pztest.c
+@@ -24,8 +24,13 @@ at the top-level directory.
+  */
+ #include <stdio.h>
+ #include <stdlib.h>
++#ifndef WIN32
+ #include <unistd.h>
+ #include <getopt.h>
++#else
++#include "win32/getopt.h"
++#include "win32/setenv.h"
++#endif /* WIN32 */
+ #include <math.h>
+ #include "superlu_zdefs.h"
+ 
+diff --git a/TEST/win32/getopt.c b/TEST/win32/getopt.c
+new file mode 100644
+index 0000000..5f71021
+--- /dev/null
++++ b/TEST/win32/getopt.c
+@@ -0,0 +1,106 @@
++#include "getopt.h" // make sure you construct the header file as dictated above
++
++/*
++* Copyright (c) 1987, 1993, 1994
++*      The Regents of the University of California.  All rights reserved.
++*
++* Redistribution and use in source and binary forms, with or without
++* modification, are permitted provided that the following conditions
++* are met:
++* 1. Redistributions of source code must retain the above copyright
++*    notice, this list of conditions and the following disclaimer.
++* 2. Redistributions in binary form must reproduce the above copyright
++*    notice, this list of conditions and the following disclaimer in the
++*    documentation and/or other materials provided with the distribution.
++* 3. All advertising materials mentioning features or use of this software
++*    must display the following acknowledgement:
++*      This product includes software developed by the University of
++*      California, Berkeley and its contributors.
++* 4. Neither the name of the University nor the names of its contributors
++*    may be used to endorse or promote products derived from this software
++*    without specific prior written permission.
++*
++* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++* ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++* SUCH DAMAGE.
++*/
++
++#include <string.h>
++#include <stdio.h>
++
++int     opterr = 1,             /* if error message should be printed */
++        optind = 1,             /* index into parent argv vector */
++        optopt,                 /* character checked for validity */
++        optreset;               /* reset getopt */
++char    *optarg;                /* argument associated with option */
++
++#define BADCH   (int)'?'
++#define BADARG  (int)':'
++#define EMSG    ""
++
++/*
++ * getopt --
++ *      Parse argc/argv argument vector.
++ */
++int getopt(int nargc, char * const nargv[], const char *ostr)
++{
++  static char *place = EMSG;              /* option letter processing */
++  const char *oli;                              /* option letter list index */
++
++  if (optreset || !*place) {              /* update scanning pointer */
++    optreset = 0;
++    if (optind >= nargc || *(place = nargv[optind]) != '-') {
++      place = EMSG;
++      return (-1);
++    }
++    if (place[1] && *++place == '-') {      /* found "--" */
++      ++optind;
++      place = EMSG;
++      return (-1);
++    }
++  }                                       /* option letter okay? */
++  if ((optopt = (int)*place++) == (int)':' ||
++    !(oli = strchr(ostr, optopt))) {
++      /*
++      * if the user didn't specify '-' as an option,
++      * assume it means -1.
++      */
++      if (optopt == (int)'-')
++        return (-1);
++      if (!*place)
++        ++optind;
++      if (opterr && *ostr != ':')
++        (void)printf("illegal option -- %c\n", optopt);
++      return (BADCH);
++  }
++  if (*++oli != ':') {                    /* don't need argument */
++    optarg = NULL;
++    if (!*place)
++      ++optind;
++  }
++  else {                                  /* need an argument */
++    if (*place)                     /* no white space */
++      optarg = place;
++    else if (nargc <= ++optind) {   /* no arg */
++      place = EMSG;
++      if (*ostr == ':')
++        return (BADARG);
++      if (opterr)
++        (void)printf("option requires an argument -- %c\n", optopt);
++      return (BADCH);
++    }
++    else                            /* white space */
++      optarg = nargv[optind];
++    place = EMSG;
++    ++optind;
++  }
++  return (optopt);                        /* dump back option letter */
++}
+\ No newline at end of file
+diff --git a/TEST/win32/getopt.h b/TEST/win32/getopt.h
+new file mode 100644
+index 0000000..1a29d6b
+--- /dev/null
++++ b/TEST/win32/getopt.h
+@@ -0,0 +1,12 @@
++#ifndef GETOPT_H
++#define GETOPT_H
++
++extern int opterr;		/* if error message should be printed */
++extern int optind;		/* index into parent argv vector */
++extern int optopt;		/* character checked for validity */
++extern int optreset;  	/* reset getopt  */
++extern char *optarg;	/* argument associated with option */
++
++int getopt(int nargc, char * const nargv[], const char *ostr);
++
++#endif /* GETOPT_H */
+\ No newline at end of file
+diff --git a/TEST/win32/setenv.c b/TEST/win32/setenv.c
+new file mode 100644
+index 0000000..50fc8d1
+--- /dev/null
++++ b/TEST/win32/setenv.c
+@@ -0,0 +1,13 @@
++
++#include <stdlib.h>
++
++#include "setenv.h"
++
++int setenv(const char *name, const char *value, int overwrite)
++{
++    if(overwrite != 0 || getenv(name) != NULL)
++    {
++        return _putenv_s(name, value) == 0 ? 0 : -1;
++    }
++    return 0;
++}
+\ No newline at end of file
+diff --git a/TEST/win32/setenv.h b/TEST/win32/setenv.h
+new file mode 100644
+index 0000000..eb03c2a
+--- /dev/null
++++ b/TEST/win32/setenv.h
+@@ -0,0 +1,6 @@
++#ifndef SETENV_H
++#define SETENV_H
++
++int setenv(const char *name, const char *value, int overwrite);
++
++#endif /* SETENV_H */
+\ No newline at end of file
