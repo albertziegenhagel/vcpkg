@@ -1,1 +1,0 @@
-static const char *petscconfigureoptions = "@PETSC_CONFIGURE_OPTIONS@";
