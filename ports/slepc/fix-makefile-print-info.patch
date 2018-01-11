@@ -1,0 +1,36 @@
+diff --git a/makefile b/makefile
+index e7c1c9038..b7e2921c4 100644
+--- a/makefile
++++ b/makefile
+@@ -92,21 +92,21 @@ info: chk_makej
+ 	-@echo "Using SLEPc configuration flags:"
+ 	-@grep "\#define " ${SLEPCCONF_H}
+ 	-@echo "-----------------------------------------"
+-	-@grep "define PETSC_VERSION" ${PETSC_DIR}/include/petscversion.h | ${SED} "s/........//"
++	# -@grep "define PETSC_VERSION" ${PETSC_DIR}/include/petscversion.h | ${SED} "s/........//"
+ 	-@echo "-----------------------------------------"
+ 	-@echo "Using PETSc configure options: ${CONFIGURE_OPTIONS}"
+ 	-@echo "Using PETSc configuration flags:"
+ 	-@grep "\#define " ${PETSCCONF_H}
+ 	-@echo "-----------------------------------------"
+ 	-@echo "Using C/C++ include paths: ${SLEPC_CC_INCLUDES}"
+-	-@echo "Using C/C++ compiler: ${PCC} ${PCC_FLAGS} ${COPTFLAGS} ${CFLAGS}"
+-	-@if [ "${FC}" != "" ]; then \
+-	   echo "Using Fortran include/module paths: ${SLEPC_FC_INCLUDES}";\
+-	   echo "Using Fortran compiler: ${FC} ${FC_FLAGS} ${FFLAGS} ${FPP_FLAGS}";\
+-         fi
++	# -@echo "Using C/C++ compiler: ${PCC} ${PCC_FLAGS} ${COPTFLAGS} ${CFLAGS}"
++	# -@if [ "${FC}" != "" ]; then \
++	#    echo "Using Fortran include/module paths: ${SLEPC_FC_INCLUDES}";\
++	#    echo "Using Fortran compiler: ${FC} ${FC_FLAGS} ${FFLAGS} ${FPP_FLAGS}";\
++    #      fi
+ 	-@echo "-----------------------------------------"
+ 	-@echo "Using C/C++ linker: ${PCC_LINKER}"
+-	-@echo "Using C/C++ flags: ${PCC_LINKER_FLAGS}"
++	# -@echo "Using C/C++ flags: ${PCC_LINKER_FLAGS}"
+ 	-@if [ "${FC}" != "" ]; then \
+ 	   echo "Using Fortran linker: ${FC_LINKER}";\
+ 	   echo "Using Fortran flags: ${FC_LINKER_FLAGS}";\
+-- 
+2.15.1.windows.2
+
