@@ -1,39 +1,10 @@
 include(vcpkg_common_functions)
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/petsc-3.8.3)
+set(PETSC_VERSION 3.9.0)
+set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/petsc-${PETSC_VERSION})
 vcpkg_download_distfile(ARCHIVE
-    URLS "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.8.3.tar.gz"
-    FILENAME "petsc-3.8.3.tar.gz"
-    SHA512 32980ea71c09a59a15e897614b66a0e900ee0d7d65b30343745c452a4bcc8384536f48e846b72250a320aba0251eae0de923ca593185dd1e2ceb4580037d6d5b
-)
-
-# Extract the source code with 7Z
-# We can not use vcpkg_extract_source_archive here, since the archive
-# includes symbolic links that are simply skipped by `cmake -E tar`
-vcpkg_find_acquire_program(7Z)
-set(EXTRACTION_DIR "${CURRENT_BUILDTREES_DIR}/src")
-get_filename_component(ARCHIVE_FILENAME ${ARCHIVE} NAME)
-if(NOT EXISTS ${EXTRACTION_DIR}/${ARCHIVE_FILENAME}.extracted)
-    message(STATUS "Extracting source ${ARCHIVE}")
-    file(MAKE_DIRECTORY ${EXTRACTION_DIR})
-    vcpkg_execute_required_process(
-        COMMAND ${7Z} e ${ARCHIVE}
-        WORKING_DIRECTORY ${EXTRACTION_DIR}
-        LOGNAME extract
-    )
-    vcpkg_execute_required_process(
-        COMMAND ${7Z} x "${EXTRACTION_DIR}/petsc-3.8.3.tar" -aos
-        WORKING_DIRECTORY ${EXTRACTION_DIR}
-        LOGNAME extract2
-    )
-    file(WRITE ${EXTRACTION_DIR}/${ARCHIVE_FILENAME}.extracted)
-endif()
-message(STATUS "Extracting done")
-
-vcpkg_apply_patches(
-    SOURCE_PATH ${SOURCE_PATH}
-    PATCHES
-        # SuperLU and Lapack name-mangling is not necessarily the same
-        ${CMAKE_CURRENT_LIST_DIR}/fix-assume-superlu-as-lapack.patch
+    URLS "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-${PETSC_VERSION}.tar.gz"
+    FILENAME "petsc-${PETSC_VERSION}.tar.gz"
+    SHA512 3bb85282b86d3fc3117a8b6641ebce0957a925b0207b8ab190e1cee9b195487e866f73aa88fa7fcb51deb9656d7722166a104f60cf65cdc62a9e92b44be18940
 )
 
 # Prepare msys
@@ -61,40 +32,56 @@ to_msys_path("${CURRENT_INSTALLED_DIR}/include"   VCPKG_INSTALL_INCLUDE_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/lib"       VCPKG_INSTALL_RELEASE_LIB_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/debug/lib" VCPKG_INSTALL_DEBUG_LIB_DIR)
 
-# Select fortran compiler
-vcpkg_enable_fortran()
+# Extract the source code with `tar` from MSYS
+# We can not use vcpkg_extract_source_archive here, since the archive
+# includes symbolic links that are simply skipped by `cmake -E tar`
+set(EXTRACTION_DIR "${CURRENT_BUILDTREES_DIR}/src")
+get_filename_component(ARCHIVE_FILENAME ${ARCHIVE} NAME)
+if(NOT EXISTS ${EXTRACTION_DIR}/${ARCHIVE_FILENAME}.extracted)
+    message(STATUS "Extracting source ${ARCHIVE}")
+    file(MAKE_DIRECTORY ${EXTRACTION_DIR})
+    vcpkg_execute_required_process(
+        COMMAND ${BASH} --noprofile --norc "${CMAKE_CURRENT_LIST_DIR}\\extract.sh" ${ARCHIVE}
+        WORKING_DIRECTORY ${EXTRACTION_DIR}
+        LOGNAME extract
+    )
+    file(WRITE ${EXTRACTION_DIR}/${ARCHIVE_FILENAME}.extracted)
+endif()
+message(STATUS "Extracting done")
 
-if(VCPKG_FORTRAN_COMPILER STREQUAL Intel)
-    set(PETSC_FORTRAN_COMPILER "win32fe ifort")
-elseif(VCPKG_FORTRAN_COMPILER STREQUAL PGI)
-    set(PETSC_FORTRAN_COMPILER "win32fe pgi")
-elseif(VCPKG_FORTRAN_COMPILER STREQUAL GNU)
-    set(PETSC_FORTRAN_COMPILER "gfortran")
-elseif(VCPKG_FORTRAN_COMPILER STREQUAL Flang)
-    set(PETSC_FORTRAN_COMPILER "win32fe flang")
+# Select compilers
+set(PETSC_C_COMPILER "win32fe cl")
+set(PETSC_CXX_COMPILER "win32fe cl")
+
+if("fortran" IN_LIST FEATURES)
+    vcpkg_enable_fortran()
+
+    if(VCPKG_FORTRAN_COMPILER STREQUAL Intel)
+        set(PETSC_FORTRAN_COMPILER "win32fe ifort")
+    elseif(VCPKG_FORTRAN_COMPILER STREQUAL PGI)
+        set(PETSC_FORTRAN_COMPILER "win32fe pgi")
+    elseif(VCPKG_FORTRAN_COMPILER STREQUAL GNU)
+        set(PETSC_C_COMPILER "gcc")
+        set(PETSC_CXX_COMPILER "g++")
+        set(PETSC_FORTRAN_COMPILER "gfortran")
+    elseif(VCPKG_FORTRAN_COMPILER STREQUAL Flang)
+        set(PETSC_FORTRAN_COMPILER "flang")
+    else()
+        message(FATAL_ERROR "Building PETSc with fortran compiler '${VCPKG_FORTRAN_COMPILER}' is not yet supported.")
+    endif()
 else()
-    message(FATAL_ERROR "Building PETSc with fortran compiler '${VCPKG_FORTRAN_COMPILER}' is not yet supported.")
+    set(PETSC_FORTRAN_COMPILER "0")
 endif()
 
 # Generic options
 set(OPTIONS
     "${MSYS_SOURCE_PATH}/config/configure.py"
-    "--with-cc=win32fe cl"
-    "--with-cxx=win32fe cl"
+    "--with-cc=${PETSC_C_COMPILER}"
+    "--with-cxx=${PETSC_CXX_COMPILER}"
     "--with-fc=${PETSC_FORTRAN_COMPILER}"
     "--ignore-cygwin-link"
     # "--CC_LINKER_FLAGS=-DEBUG -INCREMENTAL:NO -OPT:REF -OPT:ICF"
     # "--CXX_LINKER_FLAGS=-DEBUG -INCREMENTAL:NO -OPT:REF -OPT:ICF"
-    "--with-mpi-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    "--with-superlu_dist-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    "--with-metis-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    "--with-parmetis-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    "--with-hypre-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    "--with-scalapack-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    "--with-mumps-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    #"--with-hdf5-include=${VCPKG_INSTALL_INCLUDE_DIR}"
-    # --with-pastix=1
-    # --with-suitsparse=1
 )
 
 # Select CRT flag
@@ -105,22 +92,37 @@ else()
 endif()
 
 # Additional Fortran flags
-if(VCPKG_FORTRAN_COMPILER STREQUAL Intel)
-    if(VCPKG_PLATFORM_TOOLSET STREQUAL "v141")
-        file(TO_CMAKE_PATH "$ENV{VCToolsInstallDir}" VCToolsInstallDir)
-        string(APPEND ADDITIONAL_CXX_FLAGS "-D__MS_VC_INSTALL_PATH=\"${VCToolsInstallDir}\"")
-        string(APPEND ADDITIONAL_C_FLAGS "-D__MS_VC_INSTALL_PATH=\"${VCToolsInstallDir}\"")
+if("fortran" IN_LIST FEATURES)
+    if(VCPKG_FORTRAN_COMPILER STREQUAL Intel)
+        if(VCPKG_PLATFORM_TOOLSET STREQUAL "v141")
+            file(TO_CMAKE_PATH "$ENV{VCToolsInstallDir}" VCToolsInstallDir)
+            string(APPEND ADDITIONAL_CXX_FLAGS "-D__MS_VC_INSTALL_PATH=\"${VCToolsInstallDir}\"")
+            string(APPEND ADDITIONAL_C_FLAGS "-D__MS_VC_INSTALL_PATH=\"${VCToolsInstallDir}\"")
 
-        # Because we define __MS_VC_INSTALL_PATH to a path that may includes parenthesis
-        # We have to patch a part of the makefile, that will fail with parenthesis in the compile line
+            # Because we define __MS_VC_INSTALL_PATH to a path that may includes parenthesis
+            # We have to patch a part of the makefile, that will fail with parenthesis in the compile line
+            vcpkg_apply_patches(
+                SOURCE_PATH ${SOURCE_PATH}
+                PATCHES
+                    ${CMAKE_CURRENT_LIST_DIR}/fix-makefile-print-info.patch
+            )
+        endif()
+        string(APPEND FFLAGS_RELEASE "-${RUNTIME_FLAG_NAME} -names:lowercase -assume:underscore -O3 -DNDEBUG -DWIN32 -D_WINDOWS")
+        string(APPEND FFLAGS_DEBUG "-${RUNTIME_FLAG_NAME}d -names:lowercase -assume:underscore -Od -D_DEBUG")
+    elseif(VCPKG_FORTRAN_COMPILER STREQUAL Flang)
+        string(APPEND FFLAGS_RELEASE "-O3 -DNDEBUG -DWIN32 -D_WINDOWS")
+        string(APPEND FFLAGS_DEBUG "-Og -D_DEBUG")
+
+        # The PETSc config system appends 'Ws2_32.lib' as a general library to link to but does not handle
+        # passing the library to Flang correctly.
+        # Since 'Ws2_32.lib' is not required for the Fortran sources anyway, the following patch disables
+        # adding that library for Fortran.
         vcpkg_apply_patches(
             SOURCE_PATH ${SOURCE_PATH}
             PATCHES
-                ${CMAKE_CURRENT_LIST_DIR}/fix-makefile-print-info.patch
+                ${CMAKE_CURRENT_LIST_DIR}/fix-fortran-flang-libraries.patch
         )
     endif()
-    string(APPEND FFLAGS_RELEASE "-${RUNTIME_FLAG_NAME} -names:lowercase -assume:underscore -O3 -DNDEBUG -DWIN32 -D_WINDOWS")
-    string(APPEND FFLAGS_DEBUG "-${RUNTIME_FLAG_NAME}d -names:lowercase -assume:underscore -Od -D_DEBUG")
 endif()
 
 # Release and Debug options.
@@ -133,16 +135,8 @@ set(OPTIONS_RELEASE
     "--FFLAGS=${FFLAGS_RELEASE}"
     "--CPPFLAGS=-DNDEBUG -DWIN32 -D_WINDOWS ${ADDITIONAL_C_FLAGS}"
     "--CXXCPPFLAGS=-DNDEBUG -DWIN32 -D_WINDOWS ${ADDITIONAL_C_FLAGS}"
-    "--with-mpi-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpi.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpifec.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpifmc.lib]"
     "--with-blas-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/blas.lib"
     "--with-lapack-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/lapack.lib"
-    "--with-superlu_dist-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/superlu_dist.lib"
-    "--with-metis-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/metis.lib"
-    "--with-parmetis-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/parmetis.lib"
-    "--with-hypre-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/HYPRE.lib"
-    "--with-scalapack-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/scalapack.lib"
-    "--with-mumps-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/mumps_common.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/smumps.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/dmumps.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/cmumps.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/zmumps.lib]"
-    #"--with-hdf5-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/hdf5.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/hdf5_hl.lib]"
 )
 
 set(OPTIONS_DEBUG
@@ -153,17 +147,60 @@ set(OPTIONS_DEBUG
     "--FFLAGS=${FFLAGS_DEBUG}"
     "--CPPFLAGS=-D_DEBUG ${ADDITIONAL_C_FLAGS}"
     "--CXXCPPFLAGS=-D_DEBUG ${ADDITIONAL_C_FLAGS}"
-    "--with-mpi-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpi.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpifec.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpifmc.lib]"
     "--with-blas-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/blas.lib"
     "--with-lapack-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/lapack.lib"
-    "--with-superlu_dist-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/superlu_dist.lib"
-    "--with-metis-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/metis.lib"
-    "--with-parmetis-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/parmetis.lib"
-    "--with-hypre-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/HYPRE.lib"
-    "--with-scalapack-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/scalapack.lib"
-    "--with-mumps-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/mumps_common.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/smumps.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/dmumps.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/cmumps.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/zmumps.lib]"
-    #"--with-hdf5-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/hdf5_D.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/hdf5_hl_D.lib]"
 )
+
+list(APPEND OPTIONS "--with-mpi-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+if("fortran" IN_LIST FEATURES)
+    list(APPEND OPTIONS_RELEASE "--with-mpi-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpi.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpifec.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpifmc.lib]")
+    list(APPEND OPTIONS_DEBUG "--with-mpi-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpi.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpifec.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpifmc.lib]")
+else()
+    list(APPEND OPTIONS_RELEASE "--with-mpi-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/msmpi.lib")
+    list(APPEND OPTIONS_DEBUG "--with-mpi-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/msmpi.lib")
+endif()
+
+if("scalapack" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-scalapack-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-scalapack-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/scalapack.lib")
+    list(APPEND OPTIONS_DEBUG "--with-scalapack-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/scalapack.lib")
+endif()
+
+if("metis" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-metis-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-metis-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/metis.lib")
+    list(APPEND OPTIONS_DEBUG "--with-metis-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/metis.lib")
+endif()
+
+if("parmetis" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-parmetis-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-parmetis-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/parmetis.lib")
+    list(APPEND OPTIONS_DEBUG "--with-parmetis-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/parmetis.lib")
+endif()
+
+if("hypre" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-hypre-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-hypre-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/HYPRE.lib")
+    list(APPEND OPTIONS_DEBUG "--with-hypre-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/HYPRE.lib")
+endif()
+
+if("superludist" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-superlu_dist-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-superlu_dist-lib=${VCPKG_INSTALL_RELEASE_LIB_DIR}/superlu_dist.lib")
+    list(APPEND OPTIONS_DEBUG "--with-superlu_dist-lib=${VCPKG_INSTALL_DEBUG_LIB_DIR}/superlu_dist.lib")
+endif()
+
+if("mumps" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-mumps-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-mumps-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/mumps_common.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/smumps.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/dmumps.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/cmumps.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/zmumps.lib]")
+    list(APPEND OPTIONS_DEBUG "--with-mumps-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/mumps_common.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/smumps.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/dmumps.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/cmumps.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/zmumps.lib]")
+endif()
+
+if("hdf5" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-hdf5-include=${VCPKG_INSTALL_INCLUDE_DIR}")
+    list(APPEND OPTIONS_RELEASE "--with-hdf5-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/hdf5.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/hdf5_hl.lib]")
+    list(APPEND OPTIONS_DEBUG "--with-hdf5-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/hdf5_D.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/hdf5_hl_D.lib]")
+endif()
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "dynamic")
     list(APPEND OPTIONS "--with-shared-libraries=1")
@@ -192,8 +229,10 @@ vcpkg_execute_required_process(
 )
 
 # Remove the generated executables
-file(RENAME ${CURRENT_PACKAGES_DIR}/bin ${CURRENT_PACKAGES_DIR}/tools)
+file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/tools)
+file(RENAME ${CURRENT_PACKAGES_DIR}/lib/petsc/bin ${CURRENT_PACKAGES_DIR}/tools/petsc)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/bin)
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/lib/petsc/bin)
 
 # Move the dlls to the bin folder
 file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/bin)
@@ -206,9 +245,9 @@ file(RENAME ${CURRENT_PACKAGES_DIR}/debug/lib/libpetsc.pdb ${CURRENT_PACKAGES_DI
 # Patch config files
 function(fix_petsc_config_file FILEPATH)
     file(READ "${FILEPATH}" FILE_CONTENT)
-    string(REPLACE "${MSYS_PACKAGES_DIR}/debug/bin" "${VCPKG_INSTALL_DIR}/tools" FILE_CONTENT "${FILE_CONTENT}")
+    string(REPLACE "${MSYS_PACKAGES_DIR}/debug/lib/petsc/bin" "${VCPKG_INSTALL_DIR}/tools" FILE_CONTENT "${FILE_CONTENT}")
     string(REPLACE "${MSYS_PACKAGES_DIR}/debug/include" "${VCPKG_INSTALL_DIR}/include" FILE_CONTENT "${FILE_CONTENT}")
-    string(REPLACE "${MSYS_PACKAGES_DIR}/bin" "${VCPKG_INSTALL_DIR}/tools" FILE_CONTENT "${FILE_CONTENT}")
+    string(REPLACE "${MSYS_PACKAGES_DIR}/lib/petsc/bin" "${VCPKG_INSTALL_DIR}/tools" FILE_CONTENT "${FILE_CONTENT}")
     string(REPLACE "${MSYS_PACKAGES_DIR}" "${VCPKG_INSTALL_DIR}" FILE_CONTENT "${FILE_CONTENT}")
     file(WRITE "${FILEPATH}" "${FILE_CONTENT}")
 endfunction()

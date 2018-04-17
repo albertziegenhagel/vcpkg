@@ -1,0 +1,11 @@
+--- a/config/BuildSystem/config/libraries.py	Sun Apr 08 06:30:37 2018
++++ b/config/BuildSystem/config/libraries.py	Tue Apr 17 14:17:33 2018
+@@ -216,6 +216,8 @@
+     body = '\n'.join([genCall(f, fname) for f, fname in enumerate(funcs)])
+     # Setup link line
+     oldLibs = self.setCompilers.LIBS
++    if self.language[-1] == 'FC':
++      self.setCompilers.LIBS = ''
+     if libDir:
+       if not isinstance(libDir, list): libDir = [libDir]
+       for dir in libDir:

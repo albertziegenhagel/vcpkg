@@ -1,4 +1,35 @@
 Source: petsc
-Version: 3.8.3
+Version: 3.9.0
 Description: Portable, Extensible Toolkit for Scientific Computation
-Build-Depends: reference-lapack, netlib-scalapack, msmpi, hypre, superludist, mumps, metis, parmetis
+Build-Depends: reference-lapack, msmpi
+
+Feature: fortran
+Description: Fortran support for PETSc
+
+Feature: scalapack
+Description: ScaLAPACK support for PETSc
+Build-Depends: netlib-scalapack, petsc[fortran]
+
+Feature: metis
+Description: METIS support for PETSc
+Build-Depends: metis
+
+Feature: parmetis
+Description: ParMETIS support for PETSc
+Build-Depends: parmetis, petsc[metis]
+
+Feature: hypre
+Description: HYPRE support for PETSc
+Build-Depends: hypre
+
+Feature: superludist
+Description: SuperLU-Dist support for PETSc
+Build-Depends: superludist, petsc[parmetis]
+
+Feature: mumps
+Description: MUMPS support for PETSc
+Build-Depends: mumps, petsc[metis], petsc[parmetis], petsc[scalapack]
+
+Feature: hdf5
+Description: HDF5 support for PETSc
+Build-Depends: hdf5[parallel]
