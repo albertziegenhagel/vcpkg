@@ -1,9 +1,12 @@
 include(vcpkg_common_functions)
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/slepc-3.8.2)
+# set(SLEPC_VERSION 3.8.2)
+set(SLEPC_VERSION 3.9.0)
+set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/slepc-${SLEPC_VERSION})
 vcpkg_download_distfile(ARCHIVE
-    URLS "http://slepc.upv.es/download/distrib/slepc-3.8.2.tar.gz"
-    FILENAME "slepc-3.8.2.tar.gz"
-    SHA512 4d2cbcdd9ecc5e7fca10df85c0248874f379df4c7c5f6158e6896e9d5beced69c8755baf706418cd46dc2a82872a916d244b92b9fef4a7d6e8213d4899729a3e
+    URLS "http://slepc.upv.es/download/distrib/slepc-${SLEPC_VERSION}.tar.gz"
+    FILENAME "slepc-${SLEPC_VERSION}.tar.gz"
+    # SHA512 4d2cbcdd9ecc5e7fca10df85c0248874f379df4c7c5f6158e6896e9d5beced69c8755baf706418cd46dc2a82872a916d244b92b9fef4a7d6e8213d4899729a3e
+    SHA512 490403e42a2f02f56db7a9edda1c6f4d7454f6c14645ee12511a8a0551de5ea238d39dde4a5b854f82cc161582c73a5bf392b07c9161bb9a89e600ad53e28909
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 

@@ -1,18 +1,3 @@
-diff --git a/bin/maint/generatefortranstubs.py b/bin/maint/generatefortranstubs.py
-index 7f802e98a..d0940b110 100644
---- a/bin/maint/generatefortranstubs.py
-+++ b/bin/maint/generatefortranstubs.py
-@@ -13,8 +13,8 @@ def FixFile(filename):
-   ff.close()
- 
-   # gotta be a better way to do this
--  data = re.subn('\nvoid ','\nPETSC_EXTERN void PETSC_STDCALL ',data)[0]
--  data = re.subn('\nPetscErrorCode ','\nPETSC_EXTERN void PETSC_STDCALL ',data)[0]
-+  data = re.subn('\nvoid ','\nSLEPC_EXTERN void PETSC_STDCALL ',data)[0]
-+  data = re.subn('\nPetscErrorCode ','\nSLEPC_EXTERN void PETSC_STDCALL ',data)[0]
-   data = re.subn('Petsc([ToRm]*)Pointer\(int\)','Petsc\\1Pointer(void*)',data)[0]	
-   data = re.subn('PetscToPointer\(a\) \(a\)','PetscToPointer(a) (*(PetscFortranAddr *)(a))',data)[0]
-   data = re.subn('PetscFromPointer\(a\) \(int\)\(a\)','PetscFromPointer(a) (PetscFortranAddr)(a)',data)[0]
 diff --git a/gmakefile b/gmakefile
 index 5f0dade73..5c782717f 100644
 --- a/gmakefile
@@ -30,7 +15,7 @@ index 5f0dade73..5c782717f 100644
  SLEPC_COMPILE.cxx = $(call quiet,CXX) -c $(CXX_FLAGS) $(CFLAGS) $(CCPPFLAGS) $(SLEPC_CC_INCLUDES) $(CXX_DEPFLAGS)
  SLEPC_COMPILE.cu = $(call quiet,CUDAC) -c $(CUDAC_FLAGS) --compiler-options="$(PCC_FLAGS) $(CXXFLAGS) $(CCPPFLAGS)"
 diff --git a/include/slepc/private/bvimpl.h b/include/slepc/private/bvimpl.h
-index 720623ff0..0276284b2 100644
+index 46d597eba..17e165a0b 100644
 --- a/include/slepc/private/bvimpl.h
 +++ b/include/slepc/private/bvimpl.h
 @@ -14,10 +14,10 @@
@@ -47,8 +32,19 @@ index 720623ff0..0276284b2 100644
  
  typedef struct _BVOps *BVOps;
  
+@@ -255,8 +255,8 @@ PETSC_INTERN PetscErrorCode BVOrthogonalize_LAPACK_TSQR(BV,PetscInt,PetscInt,Pet
+ PETSC_INTERN PetscErrorCode BVOrthogonalize_LAPACK_TSQR_OnlyR(BV,PetscInt,PetscInt,PetscScalar*,PetscScalar*,PetscInt);
+ 
+ /* reduction operation used in BVOrthogonalize */
+-PETSC_EXTERN MPI_Op MPIU_TSQR;
+-PETSC_EXTERN void SlepcGivensPacked(void*,void*,PetscMPIInt*,MPI_Datatype*);
++SLEPC_EXTERN MPI_Op MPIU_TSQR;
++SLEPC_EXTERN void SlepcGivensPacked(void*,void*,PetscMPIInt*,MPI_Datatype*);
+ 
+ #if defined(PETSC_HAVE_VECCUDA)
+ #include <petsccuda.h>
 diff --git a/include/slepc/private/dsimpl.h b/include/slepc/private/dsimpl.h
-index dd6c98c08..20edbd463 100644
+index 78db129a1..7fa1b6700 100644
 --- a/include/slepc/private/dsimpl.h
 +++ b/include/slepc/private/dsimpl.h
 @@ -14,9 +14,9 @@
@@ -65,7 +61,7 @@ index dd6c98c08..20edbd463 100644
  
  typedef struct _DSOps *DSOps;
 diff --git a/include/slepc/private/epsimpl.h b/include/slepc/private/epsimpl.h
-index 877ab088d..99c82e807 100644
+index b8b3a6ba9..9d686677c 100644
 --- a/include/slepc/private/epsimpl.h
 +++ b/include/slepc/private/epsimpl.h
 @@ -14,9 +14,9 @@
@@ -82,7 +78,7 @@ index 877ab088d..99c82e807 100644
  typedef struct _EPSOps *EPSOps;
  
 diff --git a/include/slepc/private/fnimpl.h b/include/slepc/private/fnimpl.h
-index 3693b386e..5ca6a7e38 100644
+index 556f431d5..9957af16d 100644
 --- a/include/slepc/private/fnimpl.h
 +++ b/include/slepc/private/fnimpl.h
 @@ -14,9 +14,9 @@
@@ -99,7 +95,7 @@ index 3693b386e..5ca6a7e38 100644
  typedef struct _FNOps *FNOps;
  
 diff --git a/include/slepc/private/lmeimpl.h b/include/slepc/private/lmeimpl.h
-index 9553e2efe..0f4080f5e 100644
+index f9aa66ae5..4806315de 100644
 --- a/include/slepc/private/lmeimpl.h
 +++ b/include/slepc/private/lmeimpl.h
 @@ -14,9 +14,9 @@
@@ -129,7 +125,7 @@ index 9553e2efe..0f4080f5e 100644
  
  #endif
 diff --git a/include/slepc/private/mfnimpl.h b/include/slepc/private/mfnimpl.h
-index 2cf219bbe..93535b71b 100644
+index de72d1be7..8ec301125 100644
 --- a/include/slepc/private/mfnimpl.h
 +++ b/include/slepc/private/mfnimpl.h
 @@ -14,9 +14,9 @@
@@ -146,7 +142,7 @@ index 2cf219bbe..93535b71b 100644
  typedef struct _MFNOps *MFNOps;
  
 diff --git a/include/slepc/private/nepimpl.h b/include/slepc/private/nepimpl.h
-index 92076ec21..3717d9163 100644
+index 2df14aa6a..d79ed5e57 100644
 --- a/include/slepc/private/nepimpl.h
 +++ b/include/slepc/private/nepimpl.h
 @@ -14,9 +14,9 @@
@@ -163,7 +159,7 @@ index 92076ec21..3717d9163 100644
  typedef struct _NEPOps *NEPOps;
  
 diff --git a/include/slepc/private/pepimpl.h b/include/slepc/private/pepimpl.h
-index 67f534c1d..278ef153f 100644
+index 54c42f780..59929532d 100644
 --- a/include/slepc/private/pepimpl.h
 +++ b/include/slepc/private/pepimpl.h
 @@ -14,9 +14,9 @@
@@ -180,7 +176,7 @@ index 67f534c1d..278ef153f 100644
  typedef struct _PEPOps *PEPOps;
  
 diff --git a/include/slepc/private/rgimpl.h b/include/slepc/private/rgimpl.h
-index d4818109c..0a322dd06 100644
+index 0963f778a..991b8f039 100644
 --- a/include/slepc/private/rgimpl.h
 +++ b/include/slepc/private/rgimpl.h
 @@ -14,8 +14,8 @@
@@ -195,7 +191,7 @@ index d4818109c..0a322dd06 100644
  typedef struct _RGOps *RGOps;
  
 diff --git a/include/slepc/private/slepcimpl.h b/include/slepc/private/slepcimpl.h
-index 58552b3f2..1350041ad 100644
+index a0b087435..6086a7532 100644
 --- a/include/slepc/private/slepcimpl.h
 +++ b/include/slepc/private/slepcimpl.h
 @@ -79,8 +79,8 @@ PETSC_STATIC_INLINE PetscErrorCode SlepcPrintEigenvalueASCII(PetscScalar eigr,Pe
@@ -210,7 +206,7 @@ index 58552b3f2..1350041ad 100644
  PETSC_INTERN PetscErrorCode SlepcCitationsInitialize(void);
  PETSC_INTERN PetscErrorCode SlepcInitialize_DynamicLibraries(void);
 diff --git a/include/slepc/private/stimpl.h b/include/slepc/private/stimpl.h
-index aeea2e285..328f3a918 100644
+index 7487254b0..96924f8f2 100644
 --- a/include/slepc/private/stimpl.h
 +++ b/include/slepc/private/stimpl.h
 @@ -14,9 +14,9 @@
@@ -227,7 +223,7 @@ index aeea2e285..328f3a918 100644
  typedef struct _STOps *STOps;
  
 diff --git a/include/slepc/private/svdimpl.h b/include/slepc/private/svdimpl.h
-index 70cdce454..2241f682f 100644
+index d5802d063..ae4397f99 100644
 --- a/include/slepc/private/svdimpl.h
 +++ b/include/slepc/private/svdimpl.h
 @@ -14,9 +14,9 @@
@@ -244,7 +240,7 @@ index 70cdce454..2241f682f 100644
  typedef struct _SVDOps *SVDOps;
  
 diff --git a/include/slepc/private/vecimplslepc.h b/include/slepc/private/vecimplslepc.h
-index f7ff75f99..d9bcf044e 100644
+index 5a906a243..70949aaf0 100644
 --- a/include/slepc/private/vecimplslepc.h
 +++ b/include/slepc/private/vecimplslepc.h
 @@ -77,7 +77,7 @@ PETSC_INTERN PetscErrorCode VecAbs_Comp(Vec);
@@ -269,306 +265,196 @@ index f7ff75f99..d9bcf044e 100644
 +SLEPC_EXTERN PetscErrorCode SlepcVecPoolGetVecs(VecPool,PetscInt,Vec**);
 +SLEPC_EXTERN PetscErrorCode SlepcVecPoolRestoreVecs(VecPool,PetscInt,Vec**);
  #endif
-diff --git a/include/slepcblaslapack.h b/include/slepcblaslapack.h
-index 3532262de..9ba9bbd90 100644
---- a/include/slepcblaslapack.h
-+++ b/include/slepcblaslapack.h
-@@ -254,161 +254,161 @@
- #if !defined(PETSC_BLASLAPACK_STDCALL)
+diff --git a/include/slepcblaslapack_stdcall.h b/include/slepcblaslapack_stdcall.h
+index aa513719c..ca15443c0 100644
+--- a/include/slepcblaslapack_stdcall.h
++++ b/include/slepcblaslapack_stdcall.h
+@@ -34,26 +34,26 @@
+ #define LAPACKtgexc_ PETSCBLAS(tgexc,TGEXC)
+ #define LAPACKgeqp3_ PETSCBLAS(geqp3,GEQP3)
  
- /* LAPACK functions without string parameters */
--PETSC_EXTERN void      SLEPC_BLASLAPACK(laev2,LAEV2) (PetscScalar*,PetscScalar*,PetscScalar*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(gehrd,GEHRD) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(gelqf,GELQF) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(larfg,LARFG) (PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(lag2,LAG2) (PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(lasv2,LASV2) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(lartg,LARTG) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(laln2,LALN2) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(laed4,LAED4) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(lamrg,LAMRG) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lapy2,LAPY2) (PetscReal*,PetscReal*);
--PETSC_EXTERN void      BLASrot_(PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(laev2,LAEV2) (PetscScalar*,PetscScalar*,PetscScalar*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(gehrd,GEHRD) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(gelqf,GELQF) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(larfg,LARFG) (PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(lag2,LAG2) (PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(lasv2,LASV2) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(lartg,LARTG) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(laln2,LALN2) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(laed4,LAED4) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(lamrg,LAMRG) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lapy2,LAPY2) (PetscReal*,PetscReal*);
-+SLEPC_EXTERN void      BLASrot_(PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASR(rot,ROT) (PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(laev2,LAEV2) (PetscScalar*,PetscScalar*,PetscScalar*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(gehrd,GEHRD) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(gelqf,GELQF) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(larfg,LARFG) (PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lag2,LAG2) (PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lasv2,LASV2) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lartg,LARTG) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(laln2,LALN2) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(laed4,LAED4) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lamrg,LAMRG) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lapy2,LAPY2) (PetscReal*,PetscReal*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASR(rot,ROT) (PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(laev2,LAEV2) (PetscScalar*,PetscScalar*,PetscScalar*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(gehrd,GEHRD) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(gelqf,GELQF) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(larfg,LARFG) (PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lag2,LAG2) (PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lasv2,LASV2) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lartg,LARTG) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(laln2,LALN2) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(laed4,LAED4) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(lamrg,LAMRG) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lapy2,LAPY2) (PetscReal*,PetscReal*);
  #if !defined(PETSC_USE_COMPLEX)
--PETSC_EXTERN void      SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(orghr,ORGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(orghr,ORGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(orghr,ORGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(orghr,ORGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
  #else
--PETSC_EXTERN void      SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(unghr,UNGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(unghr,UNGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(unghr,UNGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(unghr,UNGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLAS(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
  #endif
  
  /* LAPACK functions with string parameters */
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(lanhs,LANHS) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(lange,LANGE) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(pbtrf,PBTRF) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(larf,LARF) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trmm,TRMM) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(lacpy,LACPY) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(lansy,LANSY) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(laset,LASET) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trsyl,TRSYL) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trtri,TRTRI) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(lanhs,LANHS) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(lange,LANGE) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(pbtrf,PBTRF) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(larf,LARF) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trmm,TRMM) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(lacpy,LACPY) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACK(lansy,LANSY) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(laset,LASET) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trsyl,TRSYL) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trtri,TRTRI) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
+@@ -70,16 +70,16 @@ PETSC_EXTERN void     PETSC_STDCALL PETSCBLAS(geqp3,GEQP3) (PetscBLASInt*,PetscB
+ #define LAPACKtrsyl_(a,b,c,d,e,f,g,h,i,j,k,l,m) PETSCBLAS(trsyl,TRSYL) ((a),1,(b),1,(c),(d),(e),(f),(g),(h),(i),(j),(k),(l),(m))
+ #define LAPACKtrtri_(a,b,c,d,e,f) PETSCBLAS(trtri,TRTRI) ((a),1,(b),1,(c),(d),(e),(f))
  
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(stevr,STEVR) (const char*,const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACKREAL(bdsdc,BDSDC) (const char*,const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamch,LAMCH) (const char*,PetscBLASInt);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamc3,LAMC3) (PetscReal*,PetscReal*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(stevr,STEVR) (const char*,const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACKREAL(bdsdc,BDSDC) (const char*,const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamch,LAMCH) (const char*,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamc3,LAMC3) (PetscReal*,PetscReal*);
+-PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(trmm,TRMM) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
+-PETSC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(lanhs,LANHS) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
+-PETSC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(lange,LANGE) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
+-PETSC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(pbtrf,PBTRF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(larf,LARF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
+-PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(lacpy,LACPY) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
+-PETSC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(lansy,LANSY) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
+-PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(laset,LASET) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*);
+-PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(trsyl,TRSYL) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(trtri,TRTRI) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void      PETSC_STDCALL PETSCBLAS(trmm,TRMM) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
++SLEPC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(lanhs,LANHS) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
++SLEPC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(lange,LANGE) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
++SLEPC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(pbtrf,PBTRF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void      PETSC_STDCALL PETSCBLAS(larf,LARF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
++SLEPC_EXTERN void      PETSC_STDCALL PETSCBLAS(lacpy,LACPY) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
++SLEPC_EXTERN SlepcLRT  PETSC_STDCALL PETSCBLAS(lansy,LANSY) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
++SLEPC_EXTERN void      PETSC_STDCALL PETSCBLAS(laset,LASET) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*);
++SLEPC_EXTERN void      PETSC_STDCALL PETSCBLAS(trsyl,TRSYL) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void      PETSC_STDCALL PETSCBLAS(trtri,TRTRI) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
  
+ /* subroutines in which we use only the real version, do not care whether they have different name */
+ #define LAPACKstevr_(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t) PETSCBLASREAL(stevr,STEVR) ((a),1,(b),1,(c),(d),(e),(f),(g),(h),(i),(j),(k),(l),(m),(n),(o),(p),(q),(r),(s),(t))
+@@ -87,10 +87,10 @@ PETSC_EXTERN void      PETSC_STDCALL PETSCBLAS(trtri,TRTRI) (const char*,PetscBL
+ #define LAPACKlamch_(a) PETSCBLASREAL(lamch,LAMCH) ((a),1)
+ #define LAPACKlamc3_(a,b) PETSCBLASREAL(lamc3,LAMC3) ((a),(b))
+ 
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(stevr,STEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(bdsdc,BDSDC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lamch,LAMCH) (const char*,PetscBLASInt);
+-PETSC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lamc3,LAMC3) (PetscReal*,PetscReal*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(stevr,STEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void     PETSC_STDCALL PETSCBLASREAL(bdsdc,BDSDC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lamch,LAMCH) (const char*,PetscBLASInt);
++SLEPC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lamc3,LAMC3) (PetscReal*,PetscReal*);
+ 
+ /* subroutines with different name in real/complex */
  #if !defined(PETSC_USE_COMPLEX)
--PETSC_EXTERN void      SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(ggev,GGEV) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(syevr,SYEVR) (const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(syevd,SYEVD) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(sygvd,SYGVD) (PetscBLASInt*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(ormlq,ORMLQ) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(orgtr,ORGTR) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(sytrd,SYTRD) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trevc,TREVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(gees,GEES) (const char*,const char*,PetscBLASInt(*)(PetscReal,PetscReal),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(ggev,GGEV) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(syevr,SYEVR) (const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(syevd,SYEVD) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(sygvd,SYGVD) (PetscBLASInt*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(ormlq,ORMLQ) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(orgtr,ORGTR) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(sytrd,SYTRD) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trevc,TREVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(gees,GEES) (const char*,const char*,PetscBLASInt(*)(PetscReal,PetscReal),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
- #else
--PETSC_EXTERN void      SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*, PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(ggev,GGEV) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(heevr,HEEVR) (const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(heevd,HEEVD) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(hegvd,HEGVD) (PetscBLASInt*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(unmlq,UNMLQ) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(ungtr,UNGTR) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(hetrd,HETRD) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trevc,TREVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(gees,GEES) (const char*,const char*,PetscBLASInt(*)(PetscScalar),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*, PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(ggev,GGEV) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(heevr,HEEVR) (const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(heevd,HEEVD) (const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(hegvd,HEGVD) (PetscBLASInt*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(unmlq,UNMLQ) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(ungtr,UNGTR) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(hetrd,HETRD) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trevc,TREVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,const char*,const char*,const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(gees,GEES) (const char*,const char*,PetscBLASInt(*)(PetscScalar),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt,PetscBLASInt,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt);
+@@ -110,19 +110,19 @@ PETSC_EXTERN SlepcLRT PETSC_STDCALL PETSCBLASREAL(lamc3,LAMC3) (PetscReal*,Petsc
  #endif
  
- #else /* PETSC_BLASLAPACK_STDCALL */
- 
- /* LAPACK functions without string parameters */
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(laev2,LAEV2) (PetscScalar*,PetscScalar*,PetscScalar*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gehrd,GEHRD) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gelqf,GELQF) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(larfg,LARFG) (PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lag2,LAG2) (PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lasv2,LASV2) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lartg,LARTG) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(laln2,LALN2) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(laed4,LAED4) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lamrg,LAMRG) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACKREAL(lapy2,LAPY2) (PetscReal*,PetscReal*);
--PETSC_EXTERN void PETSC_STDCALL BLASrot_(PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(laev2,LAEV2) (PetscScalar*,PetscScalar*,PetscScalar*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gehrd,GEHRD) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gelqf,GELQF) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(larfg,LARFG) (PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lag2,LAG2) (PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lasv2,LASV2) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lartg,LARTG) (PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(laln2,LALN2) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(laed4,LAED4) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(lamrg,LAMRG) (PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACKREAL(lapy2,LAPY2) (PetscReal*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL BLASrot_(PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*);
  #if !defined(PETSC_USE_COMPLEX)
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(orghr,ORGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(orghr,ORGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(ormlq,ORMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(orgtr,ORGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(sytrd,SYTRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(syevr,SYEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(syevd,SYEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(sygvd,SYGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(ormlq,ORMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(orgtr,ORGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(sytrd,SYTRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(syevr,SYEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(syevd,SYEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(sygvd,SYGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
  #else
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(unghr,UNGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgexc,TGEXC) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(unghr,UNGHR) (PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geqp3,GEQP3) (PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(unmlq,UNMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(ungtr,UNGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(hetrd,HETRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(heevr,HEEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(heevd,HEEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(hegvd,HEGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(unmlq,UNMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(ungtr,UNGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(hetrd,HETRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(heevr,HEEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(heevd,HEEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(hegvd,HEGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
  #endif
  
- /* LAPACK functions with string parameters */
--PETSC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(lanhs,LANHS) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
--PETSC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(lange,LANGE) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
--PETSC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(pbtrf,PBTRF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(larf,LARF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
--PETSC_EXTERN void      SLEPC_BLASLAPACK(trmm,TRMM) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(lacpy,LACPY) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
--PETSC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(lansy,LANSY) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(laset,LASET) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trsyl,TRSYL) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trtri,TRTRI) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(lanhs,LANHS) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
-+SLEPC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(lange,LANGE) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
-+SLEPC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(pbtrf,PBTRF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(larf,LARF) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*);
-+SLEPC_EXTERN void      SLEPC_BLASLAPACK(trmm,TRMM) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(lacpy,LACPY) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
-+SLEPC_EXTERN SlepcLRT  PETSC_STDCALL SLEPC_BLASLAPACK(lansy,LANSY) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(laset,LASET) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trsyl,TRSYL) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trtri,TRTRI) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
- 
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(stevr,STEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(bdsdc,BDSDC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamch,LAMCH) (const char*,PetscBLASInt);
--PETSC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamc3,LAMC3) (PetscReal*,PetscReal*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(stevr,STEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACKREAL(bdsdc,BDSDC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamch,LAMCH) (const char*,PetscBLASInt);
-+SLEPC_EXTERN SlepcLRT  SLEPC_BLASLAPACKREAL(lamc3,LAMC3) (PetscReal*,PetscReal*);
+ /* subroutines with different signature in real/complex */
+@@ -153,39 +153,39 @@ PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(hegvd,HEGVD) (PetscBLASInt*,const char
+ #endif
  
  #if !defined(PETSC_USE_COMPLEX)
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(syevr,SYEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(syevd,SYEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(sygvd,SYGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ormlq,ORMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(orgtr,ORGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(sytrd,SYTRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscReal,PetscReal),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(syevr,SYEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(syevd,SYEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(sygvd,SYGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ormlq,ORMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(orgtr,ORGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(sytrd,SYTRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscReal,PetscReal),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscReal,PetscReal),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscReal,PetscReal),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
  #else
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*, PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(heevr,HEEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(heevd,HEEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hegvd,HEGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(unmlq,UNMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ungtr,UNGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hetrd,HETRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscScalar),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
--PETSC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*, PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(heevr,HEEVR) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscBLASInt*, PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(heevd,HEEVD) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hegvd,HEGVD) (PetscBLASInt*,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(unmlq,UNMLQ) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(ungtr,UNGTR) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hetrd,HETRD) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscScalar),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
-+SLEPC_EXTERN void PETSC_STDCALL SLEPC_BLASLAPACK(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscScalar),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLAS(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(ggevx,GGEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(ggev,GGEV) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(trevc,TREVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(geevx,GEEVX) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(gees,GEES) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt(*)(PetscScalar),PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(trexc,TREXC) (const char*,PetscBLASInt,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(gesdd,GESDD) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(tgevc,TGEVC) (const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(hsein,HSEIN) (const char*,PetscBLASInt,const char*,PetscBLASInt,const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(stedc,STEDC) (const char*,PetscBLASInt,PetscBLASInt*,PetscReal*,PetscReal*,PetscScalar*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLAS(lascl,LASCL) (const char*,PetscBLASInt,PetscBLASInt*,PetscBLASInt*,PetscReal*,PetscReal*,PetscBLASInt*,PetscBLASInt*,PetscScalar*,PetscBLASInt*,PetscBLASInt*);
+ #endif
+ 
+ #if defined(PETSC_HAVE_COMPLEX)
+ /* complex subroutines to be called with scalar-type=real */
+ #define BLASCOMPLEXgemm_(a,b,c,d,e,f,g,h,i,j,k,l,m) PETSCBLASCOMPLEX(gemm,GEMM)((a),1,(b),1,(c),(d),(e),(f),(g),(h),(i),(j),(k),(l),(m))
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLASCOMPLEX(gemm,GEMM)(const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscComplex*,PetscComplex*,PetscBLASInt*,PetscComplex*,PetscBLASInt*,PetscComplex*,PetscComplex*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLASCOMPLEX(gemm,GEMM)(const char*,const char*,PetscBLASInt*,PetscBLASInt*,PetscBLASInt*,PetscComplex*,PetscComplex*,PetscBLASInt*,PetscComplex*,PetscBLASInt*,PetscComplex*,PetscComplex*,PetscBLASInt*);
+ #define BLASCOMPLEXscal_   PETSCBLASCOMPLEX(scal,SCAL)
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLASCOMPLEX(scal,SCAL)(const PetscBLASInt*,const PetscComplex*,PetscComplex*,const PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLASCOMPLEX(scal,SCAL)(const PetscBLASInt*,const PetscComplex*,PetscComplex*,const PetscBLASInt*);
+ #define LAPACKCOMPLEXgesv_ PETSCBLASCOMPLEX(gesv,GESV)
+-PETSC_EXTERN void PETSC_STDCALL PETSCBLASCOMPLEX(gesv,GESV)(const PetscBLASInt*,const PetscBLASInt*,PetscComplex*,const PetscBLASInt*,PetscBLASInt*,PetscComplex*,const PetscBLASInt*,PetscBLASInt*);
++SLEPC_EXTERN void PETSC_STDCALL PETSCBLASCOMPLEX(gesv,GESV)(const PetscBLASInt*,const PetscBLASInt*,PetscComplex*,const PetscBLASInt*,PetscBLASInt*,PetscComplex*,const PetscBLASInt*,PetscBLASInt*);
  #endif
  
  #endif
 diff --git a/include/slepcbv.h b/include/slepcbv.h
-index 2f9dc63c4..0a1723deb 100644
+index 4ec9c73ff..65c5e11a7 100644
 --- a/include/slepcbv.h
 +++ b/include/slepcbv.h
 @@ -15,7 +15,7 @@
@@ -580,8 +466,8 @@ index 2f9dc63c4..0a1723deb 100644
  
  /*S
      BV - Basis vectors, SLEPc object representing a collection of vectors
-@@ -42,7 +42,7 @@ typedef const char* BVType;
- #define BVCONTIGUOUS "contiguous"
+@@ -43,7 +43,7 @@ typedef const char* BVType;
+ #define BVTENSOR     "tensor"
  
  /* Logging support */
 -PETSC_EXTERN PetscClassId BV_CLASSID;
@@ -589,7 +475,7 @@ index 2f9dc63c4..0a1723deb 100644
  
  /*E
      BVOrthogType - Determines the method used in the orthogonalization
-@@ -54,7 +54,7 @@ PETSC_EXTERN PetscClassId BV_CLASSID;
+@@ -55,7 +55,7 @@ PETSC_EXTERN PetscClassId BV_CLASSID;
  E*/
  typedef enum { BV_ORTHOG_CGS,
                 BV_ORTHOG_MGS } BVOrthogType;
@@ -598,7 +484,7 @@ index 2f9dc63c4..0a1723deb 100644
  
  /*E
      BVOrthogRefineType - Determines what type of refinement to use
-@@ -67,7 +67,7 @@ E*/
+@@ -68,7 +68,7 @@ E*/
  typedef enum { BV_ORTHOG_REFINE_IFNEEDED,
                 BV_ORTHOG_REFINE_NEVER,
                 BV_ORTHOG_REFINE_ALWAYS } BVOrthogRefineType;
@@ -607,16 +493,16 @@ index 2f9dc63c4..0a1723deb 100644
  
  /*E
      BVOrthogBlockType - Determines the method used in block
-@@ -80,7 +80,7 @@ E*/
- typedef enum { BV_ORTHOG_BLOCK_GS,
-                BV_ORTHOG_BLOCK_CHOL,
-                BV_ORTHOG_BLOCK_TSQR } BVOrthogBlockType;
+@@ -83,7 +83,7 @@ typedef enum { BV_ORTHOG_BLOCK_GS,
+                BV_ORTHOG_BLOCK_TSQR,
+                BV_ORTHOG_BLOCK_TSQRCHOL,
+                BV_ORTHOG_BLOCK_SVQB     } BVOrthogBlockType;
 -PETSC_EXTERN const char *BVOrthogBlockTypes[];
 +SLEPC_EXTERN const char *BVOrthogBlockTypes[];
  
  /*E
-     BVMatMultType - Determines how to perform the BVMatMult() operation:
-@@ -96,99 +96,99 @@ E*/
+    BVMatMultType - Different ways of performing the BVMatMult() operation
+@@ -103,110 +103,110 @@ E*/
  typedef enum { BV_MATMULT_VECS,
                 BV_MATMULT_MAT,
                 BV_MATMULT_MAT_SAVE } BVMatMultType;
@@ -648,6 +534,8 @@ index 2f9dc63c4..0a1723deb 100644
  
 -PETSC_EXTERN PetscErrorCode BVGetColumn(BV,PetscInt,Vec*);
 -PETSC_EXTERN PetscErrorCode BVRestoreColumn(BV,PetscInt,Vec*);
+-PETSC_EXTERN PetscErrorCode BVGetSplit(BV,BV*,BV*);
+-PETSC_EXTERN PetscErrorCode BVRestoreSplit(BV,BV*,BV*);
 -PETSC_EXTERN PetscErrorCode BVGetArray(BV,PetscScalar**);
 -PETSC_EXTERN PetscErrorCode BVRestoreArray(BV,PetscScalar**);
 -PETSC_EXTERN PetscErrorCode BVGetArrayRead(BV,const PetscScalar**);
@@ -716,17 +604,28 @@ index 2f9dc63c4..0a1723deb 100644
 -PETSC_EXTERN PetscErrorCode BVSetMatMultMethod(BV,BVMatMultType);
 -PETSC_EXTERN PetscErrorCode BVGetMatMultMethod(BV,BVMatMultType*);
 -
+-PETSC_EXTERN PetscErrorCode BVCreateFromMat(Mat,BV*);
+-PETSC_EXTERN PetscErrorCode BVCreateMat(BV,Mat*);
+-PETSC_EXTERN PetscErrorCode BVGetMat(BV,Mat*);
+-PETSC_EXTERN PetscErrorCode BVRestoreMat(BV,Mat*);
+-
+-PETSC_EXTERN PetscErrorCode BVCreateTensor(BV,PetscInt,BV*);
+-PETSC_EXTERN PetscErrorCode BVTensorBuildFirstColumn(BV,PetscInt);
+-PETSC_EXTERN PetscErrorCode BVTensorCompress(BV,PetscInt);
+-PETSC_EXTERN PetscErrorCode BVTensorGetDegree(BV,PetscInt*);
+-PETSC_EXTERN PetscErrorCode BVTensorGetFactors(BV,BV*,Mat*);
+-PETSC_EXTERN PetscErrorCode BVTensorRestoreFactors(BV,BV*,Mat*);
+-
 -PETSC_EXTERN PetscErrorCode BVSetOptionsPrefix(BV,const char*);
 -PETSC_EXTERN PetscErrorCode BVAppendOptionsPrefix(BV,const char*);
 -PETSC_EXTERN PetscErrorCode BVGetOptionsPrefix(BV,const char*[]);
 -
 -PETSC_EXTERN PetscFunctionList BVList;
 -PETSC_EXTERN PetscErrorCode BVRegister(const char[],PetscErrorCode(*)(BV));
--
--PETSC_EXTERN PetscErrorCode BVCreateFromMat(Mat,BV*);
--PETSC_EXTERN PetscErrorCode BVCreateMat(BV,Mat*);
 +SLEPC_EXTERN PetscErrorCode BVGetColumn(BV,PetscInt,Vec*);
 +SLEPC_EXTERN PetscErrorCode BVRestoreColumn(BV,PetscInt,Vec*);
++SLEPC_EXTERN PetscErrorCode BVGetSplit(BV,BV*,BV*);
++SLEPC_EXTERN PetscErrorCode BVRestoreSplit(BV,BV*,BV*);
 +SLEPC_EXTERN PetscErrorCode BVGetArray(BV,PetscScalar**);
 +SLEPC_EXTERN PetscErrorCode BVRestoreArray(BV,PetscScalar**);
 +SLEPC_EXTERN PetscErrorCode BVGetArrayRead(BV,const PetscScalar**);
@@ -795,20 +694,29 @@ index 2f9dc63c4..0a1723deb 100644
 +SLEPC_EXTERN PetscErrorCode BVSetMatMultMethod(BV,BVMatMultType);
 +SLEPC_EXTERN PetscErrorCode BVGetMatMultMethod(BV,BVMatMultType*);
 +
++SLEPC_EXTERN PetscErrorCode BVCreateFromMat(Mat,BV*);
++SLEPC_EXTERN PetscErrorCode BVCreateMat(BV,Mat*);
++SLEPC_EXTERN PetscErrorCode BVGetMat(BV,Mat*);
++SLEPC_EXTERN PetscErrorCode BVRestoreMat(BV,Mat*);
++
++SLEPC_EXTERN PetscErrorCode BVCreateTensor(BV,PetscInt,BV*);
++SLEPC_EXTERN PetscErrorCode BVTensorBuildFirstColumn(BV,PetscInt);
++SLEPC_EXTERN PetscErrorCode BVTensorCompress(BV,PetscInt);
++SLEPC_EXTERN PetscErrorCode BVTensorGetDegree(BV,PetscInt*);
++SLEPC_EXTERN PetscErrorCode BVTensorGetFactors(BV,BV*,Mat*);
++SLEPC_EXTERN PetscErrorCode BVTensorRestoreFactors(BV,BV*,Mat*);
++
 +SLEPC_EXTERN PetscErrorCode BVSetOptionsPrefix(BV,const char*);
 +SLEPC_EXTERN PetscErrorCode BVAppendOptionsPrefix(BV,const char*);
 +SLEPC_EXTERN PetscErrorCode BVGetOptionsPrefix(BV,const char*[]);
 +
 +SLEPC_EXTERN PetscFunctionList BVList;
 +SLEPC_EXTERN PetscErrorCode BVRegister(const char[],PetscErrorCode(*)(BV));
-+
-+SLEPC_EXTERN PetscErrorCode BVCreateFromMat(Mat,BV*);
-+SLEPC_EXTERN PetscErrorCode BVCreateMat(BV,Mat*);
  
  #endif
  
 diff --git a/include/slepcds.h b/include/slepcds.h
-index b96d46806..dabde940f 100644
+index 2e28a6204..44d0f1d1c 100644
 --- a/include/slepcds.h
 +++ b/include/slepcds.h
 @@ -18,7 +18,7 @@
@@ -847,7 +755,7 @@ index b96d46806..dabde940f 100644
  #define DS_NUM_EXTRA  10
  
  /*E
-@@ -131,72 +131,72 @@ PETSC_EXTERN DSMatType DSMatExtra[];
+@@ -131,74 +131,74 @@ PETSC_EXTERN DSMatType DSMatExtra[];
  E*/
  typedef enum { DS_PARALLEL_REDUNDANT,
                 DS_PARALLEL_SYNCHRONIZED } DSParallelType;
@@ -966,8 +874,12 @@ index b96d46806..dabde940f 100644
  
 -PETSC_EXTERN PetscErrorCode DSPEPSetDegree(DS,PetscInt);
 -PETSC_EXTERN PetscErrorCode DSPEPGetDegree(DS,PetscInt*);
+-PETSC_EXTERN PetscErrorCode DSPEPSetCoefficients(DS,PetscReal*);
+-PETSC_EXTERN PetscErrorCode DSPEPGetCoefficients(DS,PetscReal**);
 +SLEPC_EXTERN PetscErrorCode DSPEPSetDegree(DS,PetscInt);
 +SLEPC_EXTERN PetscErrorCode DSPEPGetDegree(DS,PetscInt*);
++SLEPC_EXTERN PetscErrorCode DSPEPSetCoefficients(DS,PetscReal*);
++SLEPC_EXTERN PetscErrorCode DSPEPGetCoefficients(DS,PetscReal**);
  
 -PETSC_EXTERN PetscErrorCode DSNEPSetFN(DS,PetscInt,FN*);
 -PETSC_EXTERN PetscErrorCode DSNEPGetFN(DS,PetscInt,FN*);
@@ -983,7 +895,7 @@ index b96d46806..dabde940f 100644
  
  #endif
 diff --git a/include/slepceps.h b/include/slepceps.h
-index f6a58752c..96e00cb96 100644
+index 9255f258b..f5118c921 100644
 --- a/include/slepceps.h
 +++ b/include/slepceps.h
 @@ -19,7 +19,7 @@
@@ -1441,7 +1353,7 @@ index f6a58752c..96e00cb96 100644
  
  /*E
      EPSCISSExtraction - determines the extraction technique in the CISS solver
-@@ -438,28 +438,28 @@ PETSC_EXTERN const char *EPSCISSQuadRules[];
+@@ -438,29 +438,29 @@ PETSC_EXTERN const char *EPSCISSQuadRules[];
  E*/
  typedef enum { EPS_CISS_EXTRACTION_RITZ,
                 EPS_CISS_EXTRACTION_HANKEL } EPSCISSExtraction;
@@ -1461,6 +1373,7 @@ index f6a58752c..96e00cb96 100644
 -PETSC_EXTERN PetscErrorCode EPSCISSGetRefinement(EPS,PetscInt*,PetscInt*);
 -PETSC_EXTERN PetscErrorCode EPSCISSSetUseST(EPS,PetscBool);
 -PETSC_EXTERN PetscErrorCode EPSCISSGetUseST(EPS,PetscBool*);
+-PETSC_EXTERN PetscErrorCode EPSCISSGetKSPs(EPS,PetscInt*,KSP**);
 -
 -PETSC_EXTERN PetscErrorCode EPSBLOPEXSetBlockSize(EPS,PetscInt);
 -PETSC_EXTERN PetscErrorCode EPSBLOPEXGetBlockSize(EPS,PetscInt*);
@@ -1483,6 +1396,7 @@ index f6a58752c..96e00cb96 100644
 +SLEPC_EXTERN PetscErrorCode EPSCISSGetRefinement(EPS,PetscInt*,PetscInt*);
 +SLEPC_EXTERN PetscErrorCode EPSCISSSetUseST(EPS,PetscBool);
 +SLEPC_EXTERN PetscErrorCode EPSCISSGetUseST(EPS,PetscBool*);
++SLEPC_EXTERN PetscErrorCode EPSCISSGetKSPs(EPS,PetscInt*,KSP**);
 +
 +SLEPC_EXTERN PetscErrorCode EPSBLOPEXSetBlockSize(EPS,PetscInt);
 +SLEPC_EXTERN PetscErrorCode EPSBLOPEXGetBlockSize(EPS,PetscInt*);
@@ -1535,7 +1449,7 @@ index 000000000..70364b47d
 +#endif
 +
 diff --git a/include/slepcfn.h b/include/slepcfn.h
-index 85c7e4f05..30cda0674 100644
+index c9e0151ff..f94aadd6a 100644
 --- a/include/slepcfn.h
 +++ b/include/slepcfn.h
 @@ -17,7 +17,7 @@
@@ -1638,7 +1552,7 @@ index 85c7e4f05..30cda0674 100644
  
  #endif
 diff --git a/include/slepclme.h b/include/slepclme.h
-index ca53509c0..8d3e03877 100644
+index 9d961d1ea..3917272eb 100644
 --- a/include/slepclme.h
 +++ b/include/slepclme.h
 @@ -15,7 +15,7 @@
@@ -1788,7 +1702,7 @@ index ca53509c0..8d3e03877 100644
  #endif
  
 diff --git a/include/slepcmat.h b/include/slepcmat.h
-index 392946187..cffbf692e 100644
+index 3ee5bc829..e559e97e2 100644
 --- a/include/slepcmat.h
 +++ b/include/slepcmat.h
 @@ -15,8 +15,8 @@
@@ -1803,7 +1717,7 @@ index 392946187..cffbf692e 100644
  #endif
  
 diff --git a/include/slepcmfn.h b/include/slepcmfn.h
-index 98be93f8d..d2a0d61c7 100644
+index a1054dd3e..83f830c82 100644
 --- a/include/slepcmfn.h
 +++ b/include/slepcmfn.h
 @@ -16,7 +16,7 @@
@@ -1928,7 +1842,7 @@ index 98be93f8d..d2a0d61c7 100644
  #endif
  
 diff --git a/include/slepcnep.h b/include/slepcnep.h
-index 1c0c721ea..ab76de094 100644
+index 3a226e91e..da9d808d0 100644
 --- a/include/slepcnep.h
 +++ b/include/slepcnep.h
 @@ -17,7 +17,7 @@
@@ -1976,7 +1890,7 @@ index 1c0c721ea..ab76de094 100644
  
  /*E
      NEPConv - Determines the convergence test
-@@ -152,154 +152,154 @@ typedef enum {/* converged */
+@@ -152,155 +152,155 @@ typedef enum {/* converged */
                      /* unused                  = -3 */
                NEP_DIVERGED_LINEAR_SOLVE        = -4,
                NEP_CONVERGED_ITERATING          =  0} NEPConvergedReason;
@@ -2206,6 +2120,7 @@ index 1c0c721ea..ab76de094 100644
 -PETSC_EXTERN PetscErrorCode NEPCISSGetThreshold(NEP,PetscReal*,PetscReal*);
 -PETSC_EXTERN PetscErrorCode NEPCISSSetRefinement(NEP,PetscInt,PetscInt);
 -PETSC_EXTERN PetscErrorCode NEPCISSGetRefinement(NEP,PetscInt*,PetscInt*);
+-PETSC_EXTERN PetscErrorCode NEPCISSGetKSPs(NEP,PetscInt*,KSP**);
 -
 -PETSC_EXTERN PetscErrorCode NEPInterpolSetPEP(NEP,PEP);
 -PETSC_EXTERN PetscErrorCode NEPInterpolGetPEP(NEP,PEP*);
@@ -2222,7 +2137,7 @@ index 1c0c721ea..ab76de094 100644
 -PETSC_EXTERN PetscErrorCode NEPNLEIGSGetInterpolation(NEP,PetscReal*,PetscInt*);
 -PETSC_EXTERN PetscErrorCode NEPNLEIGSSetRKShifts(NEP,PetscInt,PetscScalar*);
 -PETSC_EXTERN PetscErrorCode NEPNLEIGSGetRKShifts(NEP,PetscInt*,PetscScalar**);
--PETSC_EXTERN PetscErrorCode NEPNLEIGSGetKSPs(NEP,KSP**);
+-PETSC_EXTERN PetscErrorCode NEPNLEIGSGetKSPs(NEP,PetscInt*,KSP**);
 +SLEPC_EXTERN PetscErrorCode NEPRIISetMaximumIterations(NEP,PetscInt);
 +SLEPC_EXTERN PetscErrorCode NEPRIIGetMaximumIterations(NEP,PetscInt*);
 +SLEPC_EXTERN PetscErrorCode NEPRIISetLagPreconditioner(NEP,PetscInt);
@@ -2244,6 +2159,7 @@ index 1c0c721ea..ab76de094 100644
 +SLEPC_EXTERN PetscErrorCode NEPCISSGetThreshold(NEP,PetscReal*,PetscReal*);
 +SLEPC_EXTERN PetscErrorCode NEPCISSSetRefinement(NEP,PetscInt,PetscInt);
 +SLEPC_EXTERN PetscErrorCode NEPCISSGetRefinement(NEP,PetscInt*,PetscInt*);
++SLEPC_EXTERN PetscErrorCode NEPCISSGetKSPs(NEP,PetscInt*,KSP**);
 +
 +SLEPC_EXTERN PetscErrorCode NEPInterpolSetPEP(NEP,PEP);
 +SLEPC_EXTERN PetscErrorCode NEPInterpolGetPEP(NEP,PEP*);
@@ -2260,12 +2176,12 @@ index 1c0c721ea..ab76de094 100644
 +SLEPC_EXTERN PetscErrorCode NEPNLEIGSGetInterpolation(NEP,PetscReal*,PetscInt*);
 +SLEPC_EXTERN PetscErrorCode NEPNLEIGSSetRKShifts(NEP,PetscInt,PetscScalar*);
 +SLEPC_EXTERN PetscErrorCode NEPNLEIGSGetRKShifts(NEP,PetscInt*,PetscScalar**);
-+SLEPC_EXTERN PetscErrorCode NEPNLEIGSGetKSPs(NEP,KSP**);
++SLEPC_EXTERN PetscErrorCode NEPNLEIGSGetKSPs(NEP,PetscInt*,KSP**);
  
  #endif
  
 diff --git a/include/slepcpep.h b/include/slepcpep.h
-index 5a3113552..4c4f536a3 100644
+index b8e2bc8d2..4725cff4c 100644
 --- a/include/slepcpep.h
 +++ b/include/slepcpep.h
 @@ -15,7 +15,7 @@
@@ -2286,7 +2202,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPProblemType - Determines the type of the polynomial eigenproblem
-@@ -88,7 +88,7 @@ typedef enum { PEP_BASIS_MONOMIAL,
+@@ -90,7 +90,7 @@ typedef enum { PEP_BASIS_MONOMIAL,
                 PEP_BASIS_LEGENDRE,
                 PEP_BASIS_LAGUERRE,
                 PEP_BASIS_HERMITE } PEPBasis;
@@ -2295,7 +2211,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPScale - The scaling strategy
-@@ -101,7 +101,7 @@ typedef enum { PEP_SCALE_NONE,
+@@ -103,7 +103,7 @@ typedef enum { PEP_SCALE_NONE,
                 PEP_SCALE_SCALAR,
                 PEP_SCALE_DIAGONAL,
                 PEP_SCALE_BOTH } PEPScale;
@@ -2304,7 +2220,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPRefine - The refinement type
-@@ -113,7 +113,7 @@ E*/
+@@ -115,7 +115,7 @@ E*/
  typedef enum { PEP_REFINE_NONE,
                 PEP_REFINE_SIMPLE,
                 PEP_REFINE_MULTIPLE } PEPRefine;
@@ -2313,7 +2229,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPRefineScheme - The scheme used for solving linear systems during iterative refinement
-@@ -125,7 +125,7 @@ E*/
+@@ -127,7 +127,7 @@ E*/
  typedef enum { PEP_REFINE_SCHEME_SCHUR=1,
                 PEP_REFINE_SCHEME_MBE,
                 PEP_REFINE_SCHEME_EXPLICIT } PEPRefineScheme;
@@ -2322,7 +2238,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPExtract - The extraction type
-@@ -138,7 +138,7 @@ typedef enum { PEP_EXTRACT_NONE=1,
+@@ -140,7 +140,7 @@ typedef enum { PEP_EXTRACT_NONE=1,
                 PEP_EXTRACT_NORM,
                 PEP_EXTRACT_RESIDUAL,
                 PEP_EXTRACT_STRUCTURED } PEPExtract;
@@ -2331,7 +2247,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPErrorType - The error type used to assess accuracy of computed solutions
-@@ -150,7 +150,7 @@ E*/
+@@ -152,7 +152,7 @@ E*/
  typedef enum { PEP_ERROR_ABSOLUTE,
                 PEP_ERROR_RELATIVE,
                 PEP_ERROR_BACKWARD } PEPErrorType;
@@ -2340,7 +2256,7 @@ index 5a3113552..4c4f536a3 100644
  
  /*E
      PEPConv - Determines the convergence test
-@@ -190,133 +190,133 @@ typedef enum {/* converged */
+@@ -192,142 +192,142 @@ typedef enum {/* converged */
                PEP_DIVERGED_BREAKDOWN           = -2,
                PEP_DIVERGED_SYMMETRY_LOST       = -3,
                PEP_CONVERGED_ITERATING          =  0} PEPConvergedReason;
@@ -2358,6 +2274,8 @@ index 5a3113552..4c4f536a3 100644
 -PETSC_EXTERN PetscErrorCode PEPGetNumMatrices(PEP,PetscInt*);
 -PETSC_EXTERN PetscErrorCode PEPSetTarget(PEP,PetscScalar);
 -PETSC_EXTERN PetscErrorCode PEPGetTarget(PEP,PetscScalar*);
+-PETSC_EXTERN PetscErrorCode PEPSetInterval(PEP,PetscReal,PetscReal);
+-PETSC_EXTERN PetscErrorCode PEPGetInterval(PEP,PetscReal*,PetscReal*);
 -PETSC_EXTERN PetscErrorCode PEPSetFromOptions(PEP);
 -PETSC_EXTERN PetscErrorCode PEPSetUp(PEP);
 -PETSC_EXTERN PetscErrorCode PEPSolve(PEP);
@@ -2376,6 +2294,8 @@ index 5a3113552..4c4f536a3 100644
 +SLEPC_EXTERN PetscErrorCode PEPGetNumMatrices(PEP,PetscInt*);
 +SLEPC_EXTERN PetscErrorCode PEPSetTarget(PEP,PetscScalar);
 +SLEPC_EXTERN PetscErrorCode PEPGetTarget(PEP,PetscScalar*);
++SLEPC_EXTERN PetscErrorCode PEPSetInterval(PEP,PetscReal,PetscReal);
++SLEPC_EXTERN PetscErrorCode PEPGetInterval(PEP,PetscReal*,PetscReal*);
 +SLEPC_EXTERN PetscErrorCode PEPSetFromOptions(PEP);
 +SLEPC_EXTERN PetscErrorCode PEPSetUp(PEP);
 +SLEPC_EXTERN PetscErrorCode PEPSolve(PEP);
@@ -2546,45 +2466,63 @@ index 5a3113552..4c4f536a3 100644
 -PETSC_EXTERN PetscErrorCode PEPLinearGetExplicitMatrix(PEP,PetscBool*);
 -PETSC_EXTERN PetscErrorCode PEPLinearSetEPS(PEP,EPS);
 -PETSC_EXTERN PetscErrorCode PEPLinearGetEPS(PEP,EPS*);
+-
+-PETSC_EXTERN PetscErrorCode PEPQArnoldiSetRestart(PEP,PetscReal);
+-PETSC_EXTERN PetscErrorCode PEPQArnoldiGetRestart(PEP,PetscReal*);
+-PETSC_EXTERN PetscErrorCode PEPQArnoldiSetLocking(PEP,PetscBool);
+-PETSC_EXTERN PetscErrorCode PEPQArnoldiGetLocking(PEP,PetscBool*);
+-
+-PETSC_EXTERN PetscErrorCode PEPTOARSetRestart(PEP,PetscReal);
+-PETSC_EXTERN PetscErrorCode PEPTOARGetRestart(PEP,PetscReal*);
+-PETSC_EXTERN PetscErrorCode PEPTOARSetLocking(PEP,PetscBool);
+-PETSC_EXTERN PetscErrorCode PEPTOARGetLocking(PEP,PetscBool*);
+-
+-PETSC_EXTERN PetscErrorCode PEPSTOARSetLocking(PEP,PetscBool);
+-PETSC_EXTERN PetscErrorCode PEPSTOARGetLocking(PEP,PetscBool*);
+-PETSC_EXTERN PetscErrorCode PEPSTOARSetDetectZeros(PEP,PetscBool);
+-PETSC_EXTERN PetscErrorCode PEPSTOARGetDetectZeros(PEP,PetscBool*);
+-PETSC_EXTERN PetscErrorCode PEPSTOARGetInertias(PEP,PetscInt*,PetscReal**,PetscInt**);
+-PETSC_EXTERN PetscErrorCode PEPSTOARSetDimensions(PEP,PetscInt,PetscInt,PetscInt);
+-PETSC_EXTERN PetscErrorCode PEPSTOARGetDimensions(PEP,PetscInt*,PetscInt*,PetscInt*);
+-
+-PETSC_EXTERN PetscErrorCode PEPJDSetRestart(PEP,PetscReal);
+-PETSC_EXTERN PetscErrorCode PEPJDGetRestart(PEP,PetscReal*);
+-PETSC_EXTERN PetscErrorCode PEPJDSetFix(PEP,PetscReal);
+-PETSC_EXTERN PetscErrorCode PEPJDGetFix(PEP,PetscReal*);
 +SLEPC_EXTERN PetscErrorCode PEPLinearSetCompanionForm(PEP,PetscInt);
 +SLEPC_EXTERN PetscErrorCode PEPLinearGetCompanionForm(PEP,PetscInt*);
 +SLEPC_EXTERN PetscErrorCode PEPLinearSetExplicitMatrix(PEP,PetscBool);
 +SLEPC_EXTERN PetscErrorCode PEPLinearGetExplicitMatrix(PEP,PetscBool*);
 +SLEPC_EXTERN PetscErrorCode PEPLinearSetEPS(PEP,EPS);
 +SLEPC_EXTERN PetscErrorCode PEPLinearGetEPS(PEP,EPS*);
- 
--PETSC_EXTERN PetscErrorCode PEPQArnoldiSetRestart(PEP,PetscReal);
--PETSC_EXTERN PetscErrorCode PEPQArnoldiGetRestart(PEP,PetscReal*);
--PETSC_EXTERN PetscErrorCode PEPQArnoldiSetLocking(PEP,PetscBool);
--PETSC_EXTERN PetscErrorCode PEPQArnoldiGetLocking(PEP,PetscBool*);
++
 +SLEPC_EXTERN PetscErrorCode PEPQArnoldiSetRestart(PEP,PetscReal);
 +SLEPC_EXTERN PetscErrorCode PEPQArnoldiGetRestart(PEP,PetscReal*);
 +SLEPC_EXTERN PetscErrorCode PEPQArnoldiSetLocking(PEP,PetscBool);
 +SLEPC_EXTERN PetscErrorCode PEPQArnoldiGetLocking(PEP,PetscBool*);
- 
--PETSC_EXTERN PetscErrorCode PEPTOARSetRestart(PEP,PetscReal);
--PETSC_EXTERN PetscErrorCode PEPTOARGetRestart(PEP,PetscReal*);
--PETSC_EXTERN PetscErrorCode PEPTOARSetLocking(PEP,PetscBool);
--PETSC_EXTERN PetscErrorCode PEPTOARGetLocking(PEP,PetscBool*);
++
 +SLEPC_EXTERN PetscErrorCode PEPTOARSetRestart(PEP,PetscReal);
 +SLEPC_EXTERN PetscErrorCode PEPTOARGetRestart(PEP,PetscReal*);
 +SLEPC_EXTERN PetscErrorCode PEPTOARSetLocking(PEP,PetscBool);
 +SLEPC_EXTERN PetscErrorCode PEPTOARGetLocking(PEP,PetscBool*);
- 
--PETSC_EXTERN PetscErrorCode PEPSTOARSetLocking(PEP,PetscBool);
--PETSC_EXTERN PetscErrorCode PEPSTOARGetLocking(PEP,PetscBool*);
++
 +SLEPC_EXTERN PetscErrorCode PEPSTOARSetLocking(PEP,PetscBool);
 +SLEPC_EXTERN PetscErrorCode PEPSTOARGetLocking(PEP,PetscBool*);
- 
--PETSC_EXTERN PetscErrorCode PEPJDSetRestart(PEP,PetscReal);
--PETSC_EXTERN PetscErrorCode PEPJDGetRestart(PEP,PetscReal*);
++SLEPC_EXTERN PetscErrorCode PEPSTOARSetDetectZeros(PEP,PetscBool);
++SLEPC_EXTERN PetscErrorCode PEPSTOARGetDetectZeros(PEP,PetscBool*);
++SLEPC_EXTERN PetscErrorCode PEPSTOARGetInertias(PEP,PetscInt*,PetscReal**,PetscInt**);
++SLEPC_EXTERN PetscErrorCode PEPSTOARSetDimensions(PEP,PetscInt,PetscInt,PetscInt);
++SLEPC_EXTERN PetscErrorCode PEPSTOARGetDimensions(PEP,PetscInt*,PetscInt*,PetscInt*);
++
 +SLEPC_EXTERN PetscErrorCode PEPJDSetRestart(PEP,PetscReal);
 +SLEPC_EXTERN PetscErrorCode PEPJDGetRestart(PEP,PetscReal*);
++SLEPC_EXTERN PetscErrorCode PEPJDSetFix(PEP,PetscReal);
++SLEPC_EXTERN PetscErrorCode PEPJDGetFix(PEP,PetscReal*);
  
  #endif
  
 diff --git a/include/slepcrg.h b/include/slepcrg.h
-index 05075d816..92740e9cf 100644
+index 3249d9b0b..79f32b813 100644
 --- a/include/slepcrg.h
 +++ b/include/slepcrg.h
 @@ -16,7 +16,7 @@
@@ -2596,7 +2534,7 @@ index 05075d816..92740e9cf 100644
  
  /*J
     RGType - String with the name of the region.
-@@ -32,44 +32,44 @@ typedef const char* RGType;
+@@ -32,45 +32,45 @@ typedef const char* RGType;
  #define RGRING      "ring"
  
  /* Logging support */
@@ -2610,6 +2548,17 @@ index 05075d816..92740e9cf 100644
 -PETSC_EXTERN PetscErrorCode RGGetOptionsPrefix(RG,const char *[]);
 -PETSC_EXTERN PetscErrorCode RGSetFromOptions(RG);
 -PETSC_EXTERN PetscErrorCode RGView(RG,PetscViewer);
++SLEPC_EXTERN PetscClassId RG_CLASSID;
++
++SLEPC_EXTERN PetscErrorCode RGCreate(MPI_Comm,RG*);
++SLEPC_EXTERN PetscErrorCode RGSetType(RG,RGType);
++SLEPC_EXTERN PetscErrorCode RGGetType(RG,RGType*);
++SLEPC_EXTERN PetscErrorCode RGSetOptionsPrefix(RG,const char *);
++SLEPC_EXTERN PetscErrorCode RGAppendOptionsPrefix(RG,const char *);
++SLEPC_EXTERN PetscErrorCode RGGetOptionsPrefix(RG,const char *[]);
++SLEPC_EXTERN PetscErrorCode RGSetFromOptions(RG);
++SLEPC_EXTERN PetscErrorCode RGView(RG,PetscViewer);
+ PETSC_STATIC_INLINE PetscErrorCode RGViewFromOptions(RG rg,PetscObject obj,const char name[]) {return PetscObjectViewFromOptions((PetscObject)rg,obj,name);}
 -PETSC_EXTERN PetscErrorCode RGDestroy(RG*);
 -
 -PETSC_EXTERN PetscErrorCode RGIsTrivial(RG,PetscBool*);
@@ -2625,16 +2574,6 @@ index 05075d816..92740e9cf 100644
 -
 -PETSC_EXTERN PetscFunctionList RGList;
 -PETSC_EXTERN PetscErrorCode RGRegister(const char[],PetscErrorCode(*)(RG));
-+SLEPC_EXTERN PetscClassId RG_CLASSID;
-+
-+SLEPC_EXTERN PetscErrorCode RGCreate(MPI_Comm,RG*);
-+SLEPC_EXTERN PetscErrorCode RGSetType(RG,RGType);
-+SLEPC_EXTERN PetscErrorCode RGGetType(RG,RGType*);
-+SLEPC_EXTERN PetscErrorCode RGSetOptionsPrefix(RG,const char *);
-+SLEPC_EXTERN PetscErrorCode RGAppendOptionsPrefix(RG,const char *);
-+SLEPC_EXTERN PetscErrorCode RGGetOptionsPrefix(RG,const char *[]);
-+SLEPC_EXTERN PetscErrorCode RGSetFromOptions(RG);
-+SLEPC_EXTERN PetscErrorCode RGView(RG,PetscViewer);
 +SLEPC_EXTERN PetscErrorCode RGDestroy(RG*);
 +
 +SLEPC_EXTERN PetscErrorCode RGIsTrivial(RG,PetscBool*);
@@ -2675,7 +2614,7 @@ index 05075d816..92740e9cf 100644
  
  #endif
 diff --git a/include/slepcsc.h b/include/slepcsc.h
-index aa9afbe79..061712780 100644
+index fe7cbf1dc..2f69d0961 100644
 --- a/include/slepcsc.h
 +++ b/include/slepcsc.h
 @@ -15,6 +15,7 @@
@@ -2723,7 +2662,7 @@ index aa9afbe79..061712780 100644
  
  #endif
 diff --git a/include/slepcst.h b/include/slepcst.h
-index 62fd7e86b..5ebec8479 100644
+index d8edd7d0b..c9272fd15 100644
 --- a/include/slepcst.h
 +++ b/include/slepcst.h
 @@ -17,7 +17,7 @@
@@ -2920,7 +2859,7 @@ index 62fd7e86b..5ebec8479 100644
  #endif
  
 diff --git a/include/slepcsvd.h b/include/slepcsvd.h
-index 41b29686a..d11a7cb1e 100644
+index 727234858..f931222e7 100644
 --- a/include/slepcsvd.h
 +++ b/include/slepcsvd.h
 @@ -17,7 +17,7 @@
@@ -3155,7 +3094,7 @@ index 41b29686a..d11a7cb1e 100644
  
  #endif
 diff --git a/include/slepcsys.h b/include/slepcsys.h
-index c524f13da..4ff2e0d2d 100644
+index 94bd5c8ba..5a442dd93 100644
 --- a/include/slepcsys.h
 +++ b/include/slepcsys.h
 @@ -21,6 +21,8 @@
@@ -3211,7 +3150,7 @@ index c524f13da..4ff2e0d2d 100644
  #endif
  
 diff --git a/include/slepcvec.h b/include/slepcvec.h
-index 03f7d9daf..bd40c1b41 100644
+index ecadd577a..4eb4ed238 100644
 --- a/include/slepcvec.h
 +++ b/include/slepcvec.h
 @@ -14,19 +14,20 @@
@@ -3242,8 +3181,23 @@ index 03f7d9daf..bd40c1b41 100644
  
  #endif
  
+diff --git a/lib/slepc/bin/maint/generatefortranstubs.py b/lib/slepc/bin/maint/generatefortranstubs.py
+index 7e5ba1eb5..b6391849a 100644
+--- a/lib/slepc/bin/maint/generatefortranstubs.py
++++ b/lib/slepc/bin/maint/generatefortranstubs.py
+@@ -14,8 +14,8 @@ def FixFile(filename):
+   ff.close()
+ 
+   # gotta be a better way to do this
+-  data = re.subn('\nvoid ','\nPETSC_EXTERN void PETSC_STDCALL ',data)[0]
+-  data = re.subn('\nPetscErrorCode ','\nPETSC_EXTERN void PETSC_STDCALL ',data)[0]
++  data = re.subn('\nvoid ','\nSLEPC_EXTERN void PETSC_STDCALL ',data)[0]
++  data = re.subn('\nPetscErrorCode ','\nSLEPC_EXTERN void PETSC_STDCALL ',data)[0]
+   data = re.subn('Petsc([ToRm]*)Pointer\(int\)','Petsc\\1Pointer(void*)',data)[0]	
+   data = re.subn('PetscToPointer\(a\) \(a\)','PetscToPointer(a) (*(PetscFortranAddr *)(a))',data)[0]
+   data = re.subn('PetscFromPointer\(a\) \(int\)\(a\)','PetscFromPointer(a) (PetscFortranAddr)(a)',data)[0]
 diff --git a/src/eps/impls/cg/lobpcg/lobpcg.c b/src/eps/impls/cg/lobpcg/lobpcg.c
-index ef26def45..f0550f07e 100644
+index 8c346b108..1c9af5338 100644
 --- a/src/eps/impls/cg/lobpcg/lobpcg.c
 +++ b/src/eps/impls/cg/lobpcg/lobpcg.c
 @@ -696,7 +696,7 @@ PetscErrorCode EPSDestroy_LOBPCG(EPS eps)
@@ -3256,7 +3210,7 @@ index ef26def45..f0550f07e 100644
    EPS_LOBPCG     *lobpcg;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/cg/rqcg/rqcg.c b/src/eps/impls/cg/rqcg/rqcg.c
-index a8c5a4ef7..f77bc04bd 100644
+index 64b7eb0c4..4a521b1ce 100644
 --- a/src/eps/impls/cg/rqcg/rqcg.c
 +++ b/src/eps/impls/cg/rqcg/rqcg.c
 @@ -404,7 +404,7 @@ PetscErrorCode EPSView_RQCG(EPS eps,PetscViewer viewer)
@@ -3269,10 +3223,10 @@ index a8c5a4ef7..f77bc04bd 100644
    EPS_RQCG       *rqcg;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/ciss/ciss.c b/src/eps/impls/ciss/ciss.c
-index 671be2296..41cc46831 100644
+index c6a2039ab..7b2995c47 100644
 --- a/src/eps/impls/ciss/ciss.c
 +++ b/src/eps/impls/ciss/ciss.c
-@@ -1835,7 +1835,7 @@ PetscErrorCode EPSSetDefaultST_CISS(EPS eps)
+@@ -1942,7 +1942,7 @@ PetscErrorCode EPSSetDefaultST_CISS(EPS eps)
    PetscFunctionReturn(0);
  }
  
@@ -3282,7 +3236,7 @@ index 671be2296..41cc46831 100644
    PetscErrorCode ierr;
    EPS_CISS       *ctx = (EPS_CISS*)eps->data;
 diff --git a/src/eps/impls/davidson/gd/gd.c b/src/eps/impls/davidson/gd/gd.c
-index b5cd3092b..6fa99027a 100644
+index 329f9077b..bb195d62b 100644
 --- a/src/eps/impls/davidson/gd/gd.c
 +++ b/src/eps/impls/davidson/gd/gd.c
 @@ -507,7 +507,7 @@ PetscErrorCode EPSGDGetDoubleExpansion(EPS eps,PetscBool *doubleexp)
@@ -3295,7 +3249,7 @@ index b5cd3092b..6fa99027a 100644
    PetscErrorCode  ierr;
    EPS_DAVIDSON    *data;
 diff --git a/src/eps/impls/davidson/jd/jd.c b/src/eps/impls/davidson/jd/jd.c
-index ba2ca4790..9571f0eb0 100644
+index 51e34b2af..1c4c0afc0 100644
 --- a/src/eps/impls/davidson/jd/jd.c
 +++ b/src/eps/impls/davidson/jd/jd.c
 @@ -623,7 +623,7 @@ PetscErrorCode EPSJDGetBOrth(EPS eps,PetscBool *borth)
@@ -3308,10 +3262,10 @@ index ba2ca4790..9571f0eb0 100644
    PetscErrorCode ierr;
    EPS_DAVIDSON   *data;
 diff --git a/src/eps/impls/external/arpack/arpack.c b/src/eps/impls/external/arpack/arpack.c
-index cc5d0d826..75755dd14 100644
+index fb30ff94a..d7aceabbb 100644
 --- a/src/eps/impls/external/arpack/arpack.c
 +++ b/src/eps/impls/external/arpack/arpack.c
-@@ -308,7 +308,7 @@ PetscErrorCode EPSDestroy_ARPACK(EPS eps)
+@@ -295,7 +295,7 @@ PetscErrorCode EPSDestroy_ARPACK(EPS eps)
    PetscFunctionReturn(0);
  }
  
@@ -3321,7 +3275,7 @@ index cc5d0d826..75755dd14 100644
    EPS_ARPACK     *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/external/arpack/arpackp.h b/src/eps/impls/external/arpack/arpackp.h
-index 49a868699..4c2c9da6a 100644
+index 5b6afe37d..63f6e7da7 100644
 --- a/src/eps/impls/external/arpack/arpackp.h
 +++ b/src/eps/impls/external/arpack/arpackp.h
 @@ -171,15 +171,15 @@ typedef struct {
@@ -3347,7 +3301,7 @@ index 49a868699..4c2c9da6a 100644
  
  #endif
 diff --git a/src/eps/impls/external/blopex/blopex.c b/src/eps/impls/external/blopex/blopex.c
-index aacaa9f83..e2a036f93 100644
+index a43cea2d0..63680c927 100644
 --- a/src/eps/impls/external/blopex/blopex.c
 +++ b/src/eps/impls/external/blopex/blopex.c
 @@ -405,7 +405,7 @@ PetscErrorCode EPSSetFromOptions_BLOPEX(PetscOptionItems *PetscOptionsObject,EPS
@@ -3360,7 +3314,7 @@ index aacaa9f83..e2a036f93 100644
    EPS_BLOPEX     *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/external/blzpack/blzpack.c b/src/eps/impls/external/blzpack/blzpack.c
-index 882d46fc8..0da64cc00 100644
+index d9e187e85..5995ca2ae 100644
 --- a/src/eps/impls/external/blzpack/blzpack.c
 +++ b/src/eps/impls/external/blzpack/blzpack.c
 @@ -418,7 +418,7 @@ PetscErrorCode EPSBlzpackSetNSteps(EPS eps,PetscInt nsteps)
@@ -3373,7 +3327,7 @@ index 882d46fc8..0da64cc00 100644
    PetscErrorCode ierr;
    EPS_BLZPACK    *blzpack;
 diff --git a/src/eps/impls/external/blzpack/blzpackp.h b/src/eps/impls/external/blzpack/blzpackp.h
-index b6a22f9b5..8fa570bb7 100644
+index 22175bec1..5090b94c9 100644
 --- a/src/eps/impls/external/blzpack/blzpackp.h
 +++ b/src/eps/impls/external/blzpack/blzpackp.h
 @@ -54,10 +54,10 @@ typedef struct {
@@ -3391,7 +3345,7 @@ index b6a22f9b5..8fa570bb7 100644
  #endif
  
 diff --git a/src/eps/impls/external/feast/feast.c b/src/eps/impls/external/feast/feast.c
-index 8067288fb..1a9a9bfb1 100644
+index a8ca211c4..4dfd4794b 100644
 --- a/src/eps/impls/external/feast/feast.c
 +++ b/src/eps/impls/external/feast/feast.c
 @@ -294,7 +294,7 @@ PetscErrorCode EPSFEASTGetNumPoints(EPS eps,PetscInt *npoints)
@@ -3404,7 +3358,7 @@ index 8067288fb..1a9a9bfb1 100644
    EPS_FEAST      *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/external/feast/feastp.h b/src/eps/impls/external/feast/feastp.h
-index 7ab2bdcd0..dde4004c8 100644
+index fee109f44..188c28bd5 100644
 --- a/src/eps/impls/external/feast/feastp.h
 +++ b/src/eps/impls/external/feast/feastp.h
 @@ -84,8 +84,8 @@ typedef struct {
@@ -3419,7 +3373,7 @@ index 7ab2bdcd0..dde4004c8 100644
  #endif
  
 diff --git a/src/eps/impls/external/primme/primme.c b/src/eps/impls/external/primme/primme.c
-index 306256d85..2331cba26 100644
+index 1a214372a..6967d1aa6 100644
 --- a/src/eps/impls/external/primme/primme.c
 +++ b/src/eps/impls/external/primme/primme.c
 @@ -434,7 +434,7 @@ PetscErrorCode EPSPRIMMEGetMethod(EPS eps,EPSPRIMMEMethod *method)
@@ -3432,7 +3386,7 @@ index 306256d85..2331cba26 100644
    PetscErrorCode ierr;
    EPS_PRIMME     *primme;
 diff --git a/src/eps/impls/external/trlan/trlan.c b/src/eps/impls/external/trlan/trlan.c
-index 624babd7d..e22795342 100644
+index 640fe36c2..01e7dbcf7 100644
 --- a/src/eps/impls/external/trlan/trlan.c
 +++ b/src/eps/impls/external/trlan/trlan.c
 @@ -161,7 +161,7 @@ PetscErrorCode EPSDestroy_TRLAN(EPS eps)
@@ -3445,7 +3399,7 @@ index 624babd7d..e22795342 100644
    EPS_TRLAN      *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/external/trlan/trlanp.h b/src/eps/impls/external/trlan/trlanp.h
-index 1606b76e4..0251703d8 100644
+index 538c948b4..1b0fb9609 100644
 --- a/src/eps/impls/external/trlan/trlanp.h
 +++ b/src/eps/impls/external/trlan/trlanp.h
 @@ -34,7 +34,7 @@ typedef struct {
@@ -3458,7 +3412,7 @@ index 1606b76e4..0251703d8 100644
  #endif
  
 diff --git a/src/eps/impls/krylov/arnoldi/arnoldi.c b/src/eps/impls/krylov/arnoldi/arnoldi.c
-index 48024eaec..8e283f156 100644
+index 2a19243d8..7a95cd843 100644
 --- a/src/eps/impls/krylov/arnoldi/arnoldi.c
 +++ b/src/eps/impls/krylov/arnoldi/arnoldi.c
 @@ -258,7 +258,7 @@ PetscErrorCode EPSView_Arnoldi(EPS eps,PetscViewer viewer)
@@ -3471,7 +3425,7 @@ index 48024eaec..8e283f156 100644
    EPS_ARNOLDI    *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/krylov/krylovschur/ftn-custom/zkrylovschurf.c b/src/eps/impls/krylov/krylovschur/ftn-custom/zkrylovschurf.c
-index 258ae5313..b56db88b1 100644
+index 03bd77a83..d9dfbdbe8 100644
 --- a/src/eps/impls/krylov/krylovschur/ftn-custom/zkrylovschurf.c
 +++ b/src/eps/impls/krylov/krylovschur/ftn-custom/zkrylovschurf.c
 @@ -29,13 +29,13 @@
@@ -3531,7 +3485,7 @@ index 258ae5313..b56db88b1 100644
    CHKFORTRANNULLOBJECTDEREFERENCE(Au);
    CHKFORTRANNULLOBJECTDEREFERENCE(Bu);
 diff --git a/src/eps/impls/krylov/krylovschur/krylovschur.c b/src/eps/impls/krylov/krylovschur/krylovschur.c
-index 739b71a5d..2e3a8b13d 100644
+index 52b0fd0f9..edae974d8 100644
 --- a/src/eps/impls/krylov/krylovschur/krylovschur.c
 +++ b/src/eps/impls/krylov/krylovschur/krylovschur.c
 @@ -1374,7 +1374,7 @@ PetscErrorCode EPSSetDefaultST_KrylovSchur(EPS eps)
@@ -3544,10 +3498,10 @@ index 739b71a5d..2e3a8b13d 100644
    EPS_KRYLOVSCHUR *ctx;
    PetscErrorCode  ierr;
 diff --git a/src/eps/impls/krylov/lanczos/lanczos.c b/src/eps/impls/krylov/lanczos/lanczos.c
-index f296ad4ae..92456df07 100644
+index 1d4780ff8..6288b2b2c 100644
 --- a/src/eps/impls/krylov/lanczos/lanczos.c
 +++ b/src/eps/impls/krylov/lanczos/lanczos.c
-@@ -856,7 +856,7 @@ PetscErrorCode EPSView_Lanczos(EPS eps,PetscViewer viewer)
+@@ -857,7 +857,7 @@ PetscErrorCode EPSView_Lanczos(EPS eps,PetscViewer viewer)
    PetscFunctionReturn(0);
  }
  
@@ -3557,10 +3511,10 @@ index f296ad4ae..92456df07 100644
    EPS_LANCZOS    *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/lapack/lapack.c b/src/eps/impls/lapack/lapack.c
-index 890f4ad13..7f76163ab 100644
+index b72bc2a9b..0e65613c1 100644
 --- a/src/eps/impls/lapack/lapack.c
 +++ b/src/eps/impls/lapack/lapack.c
-@@ -165,7 +165,7 @@ PetscErrorCode EPSSolve_LAPACK(EPS eps)
+@@ -166,7 +166,7 @@ PetscErrorCode EPSSolve_LAPACK(EPS eps)
    PetscFunctionReturn(0);
  }
  
@@ -3570,10 +3524,10 @@ index 890f4ad13..7f76163ab 100644
    PetscFunctionBegin;
    eps->useds = PETSC_TRUE;
 diff --git a/src/eps/impls/power/power.c b/src/eps/impls/power/power.c
-index 5f5b735ea..35be3f5fa 100644
+index b1c644029..73e99b61d 100644
 --- a/src/eps/impls/power/power.c
 +++ b/src/eps/impls/power/power.c
-@@ -975,7 +975,7 @@ PetscErrorCode EPSSetDefaultST_Power(EPS eps)
+@@ -984,7 +984,7 @@ PetscErrorCode EPSSetDefaultST_Power(EPS eps)
    PetscFunctionReturn(0);
  }
  
@@ -3583,7 +3537,7 @@ index 5f5b735ea..35be3f5fa 100644
    EPS_POWER      *ctx;
    PetscErrorCode ierr;
 diff --git a/src/eps/impls/subspace/subspace.c b/src/eps/impls/subspace/subspace.c
-index 7ffd583c0..f5a16f943 100644
+index 25d535381..d286bc148 100644
 --- a/src/eps/impls/subspace/subspace.c
 +++ b/src/eps/impls/subspace/subspace.c
 @@ -291,7 +291,7 @@ PetscErrorCode EPSDestroy_Subspace(EPS eps)
@@ -3596,10 +3550,10 @@ index 7ffd583c0..f5a16f943 100644
    PetscFunctionBegin;
    eps->useds = PETSC_TRUE;
 diff --git a/src/eps/interface/dlregiseps.c b/src/eps/interface/dlregiseps.c
-index 26f495ece..125b79f6c 100644
+index b633a4ded..8993d66f6 100644
 --- a/src/eps/interface/dlregiseps.c
 +++ b/src/eps/interface/dlregiseps.c
-@@ -95,7 +95,7 @@ PetscErrorCode EPSInitializePackage()
+@@ -91,7 +91,7 @@ PetscErrorCode EPSInitializePackage()
    This one registers all the EPS methods that are in the basic SLEPc libslepceps
    library.
   */
@@ -3609,7 +3563,7 @@ index 26f495ece..125b79f6c 100644
    PetscErrorCode ierr;
  
 diff --git a/src/eps/interface/epsdefault.c b/src/eps/interface/epsdefault.c
-index eba9c3e29..889b50d72 100644
+index 21cd3f03f..d2b120ccb 100644
 --- a/src/eps/interface/epsdefault.c
 +++ b/src/eps/interface/epsdefault.c
 @@ -204,7 +204,7 @@ PetscErrorCode EPSComputeVectors_Schur(EPS eps)
@@ -3622,7 +3576,7 @@ index eba9c3e29..889b50d72 100644
  
     Level: developer
 diff --git a/src/eps/interface/epsregis.c b/src/eps/interface/epsregis.c
-index 2b33b3f65..30117d05e 100644
+index b81e24a02..7dd379938 100644
 --- a/src/eps/interface/epsregis.c
 +++ b/src/eps/interface/epsregis.c
 @@ -10,35 +10,35 @@
@@ -3679,7 +3633,7 @@ index 2b33b3f65..30117d05e 100644
  /*@C
    EPSRegisterAll - Registers all the eigenvalue solvers in the EPS package.
 diff --git a/src/eps/interface/epssetup.c b/src/eps/interface/epssetup.c
-index 9ebe80b96..e82ce976f 100644
+index 9665a82dd..21395637b 100644
 --- a/src/eps/interface/epssetup.c
 +++ b/src/eps/interface/epssetup.c
 @@ -506,7 +506,7 @@ PetscErrorCode EPSSetDimensions_Default(EPS eps,PetscInt nev,PetscInt *ncv,Petsc
@@ -3692,7 +3646,7 @@ index 9ebe80b96..e82ce976f 100644
  
     Level: developer
 diff --git a/src/eps/interface/ftn-custom/zepsf.c b/src/eps/interface/ftn-custom/zepsf.c
-index 01dc19973..edcd1b743 100644
+index 3685d9049..8892645e7 100644
 --- a/src/eps/interface/ftn-custom/zepsf.c
 +++ b/src/eps/interface/ftn-custom/zepsf.c
 @@ -122,27 +122,27 @@
@@ -4099,7 +4053,7 @@ index 01dc19973..edcd1b743 100644
    *ierr = EPSSetInitialSpace(*eps,*n,is);
  }
 diff --git a/src/lme/impls/krylov/lmekrylov.c b/src/lme/impls/krylov/lmekrylov.c
-index c482ee485..f0cd2730a 100644
+index 75ce9987c..2b46f803f 100644
 --- a/src/lme/impls/krylov/lmekrylov.c
 +++ b/src/lme/impls/krylov/lmekrylov.c
 @@ -233,7 +233,7 @@ PetscErrorCode LMESolve_Krylov_Lyapunov(LME lme)
@@ -4112,10 +4066,10 @@ index c482ee485..f0cd2730a 100644
    PetscFunctionBegin;
    lme->ops->solve[LME_LYAPUNOV]      = LMESolve_Krylov_Lyapunov;
 diff --git a/src/lme/interface/dlregislme.c b/src/lme/interface/dlregislme.c
-index 2a20deab2..6d4c9fff3 100644
+index 6310b67d0..8ecc44822 100644
 --- a/src/lme/interface/dlregislme.c
 +++ b/src/lme/interface/dlregislme.c
-@@ -90,7 +90,7 @@ PetscErrorCode LMEInitializePackage(void)
+@@ -86,7 +86,7 @@ PetscErrorCode LMEInitializePackage(void)
    This one registers all the LME methods that are in the basic SLEPc libslepclme
    library.
   */
@@ -4125,7 +4079,7 @@ index 2a20deab2..6d4c9fff3 100644
    PetscErrorCode ierr;
  
 diff --git a/src/lme/interface/ftn-custom/zlmef.c b/src/lme/interface/ftn-custom/zlmef.c
-index 3dbe1f22e..16fa6614d 100644
+index 271b708b0..00568c543 100644
 --- a/src/lme/interface/ftn-custom/zlmef.c
 +++ b/src/lme/interface/ftn-custom/zlmef.c
 @@ -45,12 +45,12 @@
@@ -4243,7 +4197,7 @@ index 3dbe1f22e..16fa6614d 100644
    lmegettolerances_(lme,tol,maxits,ierr);
  }
 diff --git a/src/lme/interface/lmeregis.c b/src/lme/interface/lmeregis.c
-index 2f61064cd..3c7c206c7 100644
+index b7526f136..9ae96da46 100644
 --- a/src/lme/interface/lmeregis.c
 +++ b/src/lme/interface/lmeregis.c
 @@ -10,7 +10,7 @@
@@ -4256,7 +4210,7 @@ index 2f61064cd..3c7c206c7 100644
  /*@C
    LMERegisterAll - Registers all the matrix functions in the LME package.
 diff --git a/src/lme/interface/lmesetup.c b/src/lme/interface/lmesetup.c
-index 8f2973db9..8f2cb6d7d 100644
+index 9004f1de6..3552c1d13 100644
 --- a/src/lme/interface/lmesetup.c
 +++ b/src/lme/interface/lmesetup.c
 @@ -418,7 +418,7 @@ PetscErrorCode LMEGetSolution(LME lme,Mat *X)
@@ -4269,7 +4223,7 @@ index 8f2973db9..8f2cb6d7d 100644
  
     Level: developer
 diff --git a/src/mfn/impls/expokit/mfnexpokit.c b/src/mfn/impls/expokit/mfnexpokit.c
-index 14ebc5c25..93d434ad8 100644
+index 0a37a066d..71c976fd8 100644
 --- a/src/mfn/impls/expokit/mfnexpokit.c
 +++ b/src/mfn/impls/expokit/mfnexpokit.c
 @@ -180,7 +180,7 @@ PetscErrorCode MFNSolve_Expokit(MFN mfn,Vec b,Vec x)
@@ -4282,7 +4236,7 @@ index 14ebc5c25..93d434ad8 100644
    PetscFunctionBegin;
    mfn->ops->solve          = MFNSolve_Expokit;
 diff --git a/src/mfn/impls/krylov/mfnkrylov.c b/src/mfn/impls/krylov/mfnkrylov.c
-index d8919eb4b..ff6d6294a 100644
+index e9ee536a2..8979bcbda 100644
 --- a/src/mfn/impls/krylov/mfnkrylov.c
 +++ b/src/mfn/impls/krylov/mfnkrylov.c
 @@ -166,7 +166,7 @@ PetscErrorCode MFNSolve_Krylov(MFN mfn,Vec b,Vec x)
@@ -4295,10 +4249,10 @@ index d8919eb4b..ff6d6294a 100644
    PetscFunctionBegin;
    mfn->ops->solve          = MFNSolve_Krylov;
 diff --git a/src/mfn/interface/dlregismfn.c b/src/mfn/interface/dlregismfn.c
-index af4a5653f..15ac082e2 100644
+index 422303203..f57cacb59 100644
 --- a/src/mfn/interface/dlregismfn.c
 +++ b/src/mfn/interface/dlregismfn.c
-@@ -88,7 +88,7 @@ PetscErrorCode MFNInitializePackage(void)
+@@ -84,7 +84,7 @@ PetscErrorCode MFNInitializePackage(void)
    This one registers all the MFN methods that are in the basic SLEPc libslepcmfn
    library.
   */
@@ -4308,7 +4262,7 @@ index af4a5653f..15ac082e2 100644
    PetscErrorCode ierr;
  
 diff --git a/src/mfn/interface/ftn-custom/zmfnf.c b/src/mfn/interface/ftn-custom/zmfnf.c
-index 2f03cd07c..a0727220d 100644
+index 7e3f255d7..685df7681 100644
 --- a/src/mfn/interface/ftn-custom/zmfnf.c
 +++ b/src/mfn/interface/ftn-custom/zmfnf.c
 @@ -45,12 +45,12 @@
@@ -4426,7 +4380,7 @@ index 2f03cd07c..a0727220d 100644
    mfngettolerances_(mfn,tol,maxits,ierr);
  }
 diff --git a/src/mfn/interface/mfnregis.c b/src/mfn/interface/mfnregis.c
-index 69b272875..902dd5379 100644
+index 8ac481072..cb0c41305 100644
 --- a/src/mfn/interface/mfnregis.c
 +++ b/src/mfn/interface/mfnregis.c
 @@ -10,8 +10,8 @@
@@ -4441,7 +4395,7 @@ index 69b272875..902dd5379 100644
  /*@C
    MFNRegisterAll - Registers all the matrix functions in the MFN package.
 diff --git a/src/mfn/interface/mfnsetup.c b/src/mfn/interface/mfnsetup.c
-index a8db4f52b..9912a7420 100644
+index 3bb0812c3..971eebca8 100644
 --- a/src/mfn/interface/mfnsetup.c
 +++ b/src/mfn/interface/mfnsetup.c
 @@ -143,7 +143,7 @@ PetscErrorCode MFNGetOperator(MFN mfn,Mat *A)
@@ -4454,10 +4408,10 @@ index a8db4f52b..9912a7420 100644
  
     Level: developer
 diff --git a/src/nep/impls/ciss/nciss.c b/src/nep/impls/ciss/nciss.c
-index 44a0baaee..63feda069 100644
+index ab8a06b90..f28c071f7 100644
 --- a/src/nep/impls/ciss/nciss.c
 +++ b/src/nep/impls/ciss/nciss.c
-@@ -1050,7 +1050,7 @@ PetscErrorCode NEPView_CISS(NEP nep,PetscViewer viewer)
+@@ -1123,7 +1123,7 @@ PetscErrorCode NEPView_CISS(NEP nep,PetscViewer viewer)
    PetscFunctionReturn(0);
  }
  
@@ -4467,10 +4421,10 @@ index 44a0baaee..63feda069 100644
    PetscErrorCode ierr;
    NEP_CISS       *ctx = (NEP_CISS*)nep->data;
 diff --git a/src/nep/impls/interpol/interpol.c b/src/nep/impls/interpol/interpol.c
-index fe2945883..be4d82f5a 100644
+index 862f04e00..16fca8316 100644
 --- a/src/nep/impls/interpol/interpol.c
 +++ b/src/nep/impls/interpol/interpol.c
-@@ -474,7 +474,7 @@ PetscErrorCode NEPDestroy_Interpol(NEP nep)
+@@ -475,7 +475,7 @@ PetscErrorCode NEPDestroy_Interpol(NEP nep)
    PetscFunctionReturn(0);
  }
  
@@ -4480,10 +4434,10 @@ index fe2945883..be4d82f5a 100644
    PetscErrorCode ierr;
    NEP_INTERPOL   *ctx;
 diff --git a/src/nep/impls/narnoldi/narnoldi.c b/src/nep/impls/narnoldi/narnoldi.c
-index 41a3cab8e..7b863df90 100644
+index c11ecc522..87134e827 100644
 --- a/src/nep/impls/narnoldi/narnoldi.c
 +++ b/src/nep/impls/narnoldi/narnoldi.c
-@@ -301,7 +301,7 @@ PetscErrorCode NEPDestroy_NArnoldi(NEP nep)
+@@ -299,7 +299,7 @@ PetscErrorCode NEPDestroy_NArnoldi(NEP nep)
    PetscFunctionReturn(0);
  }
  
@@ -4492,11 +4446,24 @@ index 41a3cab8e..7b863df90 100644
  {
    PetscErrorCode ierr;
    NEP_NARNOLDI   *ctx;
+diff --git a/src/nep/impls/nleigs/ftn-custom/znleigsf.c b/src/nep/impls/nleigs/ftn-custom/znleigsf.c
+index 8f28af379..8ff49bd0c 100644
+--- a/src/nep/impls/nleigs/ftn-custom/znleigsf.c
++++ b/src/nep/impls/nleigs/ftn-custom/znleigsf.c
+@@ -26,7 +26,7 @@ static PetscErrorCode oursingularitiesfunc(NEP nep,PetscInt *maxnp,PetscScalar *
+   PetscObjectUseFortranCallback(nep,_cb.singularities,(NEP*,PetscInt*,PetscScalar*,void*,PetscErrorCode*),(&nep,maxnp,xi,_ctx,&ierr));
+ }
+ 
+-PETSC_EXTERN void PETSC_STDCALL nepnleigssetsingularitiesfunction_(NEP *nep,void (PETSC_STDCALL *func)(NEP*,PetscInt*,PetscScalar*,void*,PetscErrorCode*),void *ctx,PetscErrorCode *ierr)
++SLEPC_EXTERN void PETSC_STDCALL nepnleigssetsingularitiesfunction_(NEP *nep,void (PETSC_STDCALL *func)(NEP*,PetscInt*,PetscScalar*,void*,PetscErrorCode*),void *ctx,PetscErrorCode *ierr)
+ {
+   CHKFORTRANNULLOBJECT(ctx);
+   *ierr = PetscObjectSetFortranCallback((PetscObject)*nep,PETSC_FORTRAN_CALLBACK_CLASS,&_cb.singularities,(PetscVoidFunction)func,ctx); if (*ierr) return;
 diff --git a/src/nep/impls/nleigs/nleigs.c b/src/nep/impls/nleigs/nleigs.c
-index cc2c3ce4f..a6d7dfd5b 100644
+index ddac356ac..35ce771a9 100644
 --- a/src/nep/impls/nleigs/nleigs.c
 +++ b/src/nep/impls/nleigs/nleigs.c
-@@ -2004,7 +2004,7 @@ PetscErrorCode NEPDestroy_NLEIGS(NEP nep)
+@@ -1876,7 +1876,7 @@ PetscErrorCode NEPDestroy_NLEIGS(NEP nep)
    PetscFunctionReturn(0);
  }
  
@@ -4506,10 +4473,10 @@ index cc2c3ce4f..a6d7dfd5b 100644
    PetscErrorCode ierr;
    NEP_NLEIGS     *ctx;
 diff --git a/src/nep/impls/rii/rii.c b/src/nep/impls/rii/rii.c
-index 5a4920859..65fb6b79a 100644
+index 50b3084e0..6cfbd3aa2 100644
 --- a/src/nep/impls/rii/rii.c
 +++ b/src/nep/impls/rii/rii.c
-@@ -551,7 +551,7 @@ PetscErrorCode NEPDestroy_RII(NEP nep)
+@@ -549,7 +549,7 @@ PetscErrorCode NEPDestroy_RII(NEP nep)
    PetscFunctionReturn(0);
  }
  
@@ -4519,10 +4486,10 @@ index 5a4920859..65fb6b79a 100644
    PetscErrorCode ierr;
    NEP_RII        *ctx;
 diff --git a/src/nep/impls/slp/slp.c b/src/nep/impls/slp/slp.c
-index 3f2fb5ee1..8cd29364d 100644
+index 0ed0c9f0d..718a8af05 100644
 --- a/src/nep/impls/slp/slp.c
 +++ b/src/nep/impls/slp/slp.c
-@@ -259,7 +259,7 @@ PetscErrorCode NEPDestroy_SLP(NEP nep)
+@@ -257,7 +257,7 @@ PetscErrorCode NEPDestroy_SLP(NEP nep)
    PetscFunctionReturn(0);
  }
  
@@ -4532,10 +4499,10 @@ index 3f2fb5ee1..8cd29364d 100644
    PetscErrorCode ierr;
    NEP_SLP        *ctx;
 diff --git a/src/nep/interface/dlregisnep.c b/src/nep/interface/dlregisnep.c
-index 61c3aa519..63896a17a 100644
+index 1db504ad0..fb8e4c8b7 100644
 --- a/src/nep/interface/dlregisnep.c
 +++ b/src/nep/interface/dlregisnep.c
-@@ -95,7 +95,7 @@ PetscErrorCode NEPInitializePackage(void)
+@@ -91,7 +91,7 @@ PetscErrorCode NEPInitializePackage(void)
    This one registers all the NEP methods that are in the basic SLEPc libslepcnep
    library.
   */
@@ -4545,7 +4512,7 @@ index 61c3aa519..63896a17a 100644
    PetscErrorCode ierr;
  
 diff --git a/src/nep/interface/ftn-custom/znepf.c b/src/nep/interface/ftn-custom/znepf.c
-index 0f86c1f9d..e93a7f01a 100644
+index 0ed8ec5d8..99a1c425a 100644
 --- a/src/nep/interface/ftn-custom/znepf.c
 +++ b/src/nep/interface/ftn-custom/znepf.c
 @@ -119,27 +119,27 @@
@@ -4932,7 +4899,7 @@ index 0f86c1f9d..e93a7f01a 100644
    *ierr = NEPSetInitialSpace(*nep,*n,is);
  }
 diff --git a/src/nep/interface/nepdefault.c b/src/nep/interface/nepdefault.c
-index 6e4ac17fc..3a6296e5f 100644
+index 087cae682..27bbcf15e 100644
 --- a/src/nep/interface/nepdefault.c
 +++ b/src/nep/interface/nepdefault.c
 @@ -23,7 +23,7 @@
@@ -4945,7 +4912,7 @@ index 6e4ac17fc..3a6296e5f 100644
  
     Level: developer
 diff --git a/src/nep/interface/nepregis.c b/src/nep/interface/nepregis.c
-index 0f47cd9b7..4d2b590bc 100644
+index 744361a63..759b898c2 100644
 --- a/src/nep/interface/nepregis.c
 +++ b/src/nep/interface/nepregis.c
 @@ -10,14 +10,14 @@
@@ -4970,7 +4937,7 @@ index 0f47cd9b7..4d2b590bc 100644
  /*@C
     NEPRegisterAll - Registers all the solvers in the NEP package.
 diff --git a/src/nep/interface/nepsetup.c b/src/nep/interface/nepsetup.c
-index 88325172b..2ac40a910 100644
+index c45722e67..61d2a3c23 100644
 --- a/src/nep/interface/nepsetup.c
 +++ b/src/nep/interface/nepsetup.c
 @@ -283,7 +283,7 @@ PetscErrorCode NEPSetDimensions_Default(NEP nep,PetscInt nev,PetscInt *ncv,Petsc
@@ -4983,10 +4950,10 @@ index 88325172b..2ac40a910 100644
  
     Level: developer
 diff --git a/src/pep/impls/jd/pjd.c b/src/pep/impls/jd/pjd.c
-index 9bb9e09c9..f30c21f3b 100644
+index eb99afe68..2452891c7 100644
 --- a/src/pep/impls/jd/pjd.c
 +++ b/src/pep/impls/jd/pjd.c
-@@ -1184,7 +1184,7 @@ PetscErrorCode PEPDestroy_JD(PEP pep)
+@@ -1348,7 +1348,7 @@ PetscErrorCode PEPDestroy_JD(PEP pep)
    PetscFunctionReturn(0);
  }
  
@@ -4996,10 +4963,10 @@ index 9bb9e09c9..f30c21f3b 100644
    PEP_JD         *pjd;
    PetscErrorCode ierr;
 diff --git a/src/pep/impls/krylov/qarnoldi/qarnoldi.c b/src/pep/impls/krylov/qarnoldi/qarnoldi.c
-index 6f748aae0..b2a8a1bcd 100644
+index 7d0fb8900..406f061cf 100644
 --- a/src/pep/impls/krylov/qarnoldi/qarnoldi.c
 +++ b/src/pep/impls/krylov/qarnoldi/qarnoldi.c
-@@ -534,7 +534,7 @@ PetscErrorCode PEPDestroy_QArnoldi(PEP pep)
+@@ -535,7 +535,7 @@ PetscErrorCode PEPDestroy_QArnoldi(PEP pep)
    PetscFunctionReturn(0);
  }
  
@@ -5008,11 +4975,24 @@ index 6f748aae0..b2a8a1bcd 100644
  {
    PEP_QARNOLDI   *ctx;
    PetscErrorCode ierr;
+diff --git a/src/pep/impls/krylov/stoar/ftn-custom/zstoarf.c b/src/pep/impls/krylov/stoar/ftn-custom/zstoarf.c
+index 1ac34896f..6cf022d6c 100644
+--- a/src/pep/impls/krylov/stoar/ftn-custom/zstoarf.c
++++ b/src/pep/impls/krylov/stoar/ftn-custom/zstoarf.c
+@@ -17,7 +17,7 @@
+ #define pepstoargetinertias_        pepstoargetinertias
+ #endif
+ 
+-PETSC_EXTERN void PETSC_STDCALL pepstoargetinertias_(PEP *pep,PetscInt *nshift,PetscReal *shifts,PetscInt *inertias,PetscErrorCode *ierr)
++SLEPC_EXTERN void PETSC_STDCALL pepstoargetinertias_(PEP *pep,PetscInt *nshift,PetscReal *shifts,PetscInt *inertias,PetscErrorCode *ierr)
+ {
+   PetscReal *oshifts;
+   PetscInt  *oinertias;
 diff --git a/src/pep/impls/krylov/stoar/stoar.c b/src/pep/impls/krylov/stoar/stoar.c
-index b3b401fe5..851f5c88a 100644
+index fa8f50a5c..3746e7326 100644
 --- a/src/pep/impls/krylov/stoar/stoar.c
 +++ b/src/pep/impls/krylov/stoar/stoar.c
-@@ -678,7 +678,7 @@ PetscErrorCode PEPDestroy_STOAR(PEP pep)
+@@ -838,7 +838,7 @@ PetscErrorCode PEPDestroy_STOAR(PEP pep)
    PetscFunctionReturn(0);
  }
  
@@ -5022,10 +5002,10 @@ index b3b401fe5..851f5c88a 100644
    PetscErrorCode ierr;
    PEP_TOAR      *ctx;
 diff --git a/src/pep/impls/krylov/toar/ptoar.c b/src/pep/impls/krylov/toar/ptoar.c
-index 76135cc60..9996b784c 100644
+index 535f73286..33e4a6e34 100644
 --- a/src/pep/impls/krylov/toar/ptoar.c
 +++ b/src/pep/impls/krylov/toar/ptoar.c
-@@ -1115,7 +1115,7 @@ PetscErrorCode PEPDestroy_TOAR(PEP pep)
+@@ -858,7 +858,7 @@ PetscErrorCode PEPDestroy_TOAR(PEP pep)
    PetscFunctionReturn(0);
  }
  
@@ -5035,10 +5015,10 @@ index 76135cc60..9996b784c 100644
    PEP_TOAR       *ctx;
    PetscErrorCode ierr;
 diff --git a/src/pep/impls/linear/linear.c b/src/pep/impls/linear/linear.c
-index 04a0ff250..7429713b0 100644
+index 88113b61a..57afdcd3e 100644
 --- a/src/pep/impls/linear/linear.c
 +++ b/src/pep/impls/linear/linear.c
-@@ -1048,7 +1048,7 @@ PetscErrorCode PEPDestroy_Linear(PEP pep)
+@@ -1049,7 +1049,7 @@ PetscErrorCode PEPDestroy_Linear(PEP pep)
    PetscFunctionReturn(0);
  }
  
@@ -5048,10 +5028,10 @@ index 04a0ff250..7429713b0 100644
    PetscErrorCode ierr;
    PEP_LINEAR     *ctx;
 diff --git a/src/pep/interface/dlregispep.c b/src/pep/interface/dlregispep.c
-index 1a95b1330..55a2f64da 100644
+index cdfbbecc6..6c72e7f67 100644
 --- a/src/pep/interface/dlregispep.c
 +++ b/src/pep/interface/dlregispep.c
-@@ -95,7 +95,7 @@ PetscErrorCode PEPInitializePackage(void)
+@@ -91,7 +91,7 @@ PetscErrorCode PEPInitializePackage(void)
    This one registers all the PEP methods that are in the basic SLEPc libslepcpep
    library.
   */
@@ -5061,7 +5041,7 @@ index 1a95b1330..55a2f64da 100644
    PetscErrorCode ierr;
  
 diff --git a/src/pep/interface/ftn-custom/zpepf.c b/src/pep/interface/ftn-custom/zpepf.c
-index f6bb5a041..d0c693769 100644
+index e9c1510d5..0cf9ce85f 100644
 --- a/src/pep/interface/ftn-custom/zpepf.c
 +++ b/src/pep/interface/ftn-custom/zpepf.c
 @@ -128,27 +128,27 @@
@@ -5477,7 +5457,7 @@ index f6bb5a041..d0c693769 100644
    *ierr = PEPSetInitialSpace(*pep,*n,is);
  }
 diff --git a/src/pep/interface/pepdefault.c b/src/pep/interface/pepdefault.c
-index f22707d22..338052363 100644
+index 6b2b983f0..5abd92b74 100644
 --- a/src/pep/interface/pepdefault.c
 +++ b/src/pep/interface/pepdefault.c
 @@ -23,7 +23,7 @@
@@ -5490,7 +5470,7 @@ index f22707d22..338052363 100644
  
     Level: developer
 diff --git a/src/pep/interface/pepregis.c b/src/pep/interface/pepregis.c
-index 59e01b47d..72971e70e 100644
+index 0d545c5eb..ee684799d 100644
 --- a/src/pep/interface/pepregis.c
 +++ b/src/pep/interface/pepregis.c
 @@ -10,12 +10,12 @@
@@ -5512,10 +5492,10 @@ index 59e01b47d..72971e70e 100644
  
  /*@C
 diff --git a/src/pep/interface/pepsetup.c b/src/pep/interface/pepsetup.c
-index 8e1feeeb2..1d207a86e 100644
+index 91e2a35d6..262c3db36 100644
 --- a/src/pep/interface/pepsetup.c
 +++ b/src/pep/interface/pepsetup.c
-@@ -440,7 +440,7 @@ PetscErrorCode PEPSetDimensions_Default(PEP pep,PetscInt nev,PetscInt *ncv,Petsc
+@@ -445,7 +445,7 @@ PetscErrorCode PEPSetDimensions_Default(PEP pep,PetscInt nev,PetscInt *ncv,Petsc
             working basis slightly larger than ncv
  
     Developers Note:
@@ -5525,10 +5505,10 @@ index 8e1feeeb2..1d207a86e 100644
  
     Level: developer
 diff --git a/src/svd/impls/cross/cross.c b/src/svd/impls/cross/cross.c
-index 51cb2f84d..213d5cc7b 100644
+index becdfc299..88309f28b 100644
 --- a/src/svd/impls/cross/cross.c
 +++ b/src/svd/impls/cross/cross.c
-@@ -453,7 +453,7 @@ PetscErrorCode SVDDestroy_Cross(SVD svd)
+@@ -451,7 +451,7 @@ PetscErrorCode SVDDestroy_Cross(SVD svd)
    PetscFunctionReturn(0);
  }
  
@@ -5538,10 +5518,10 @@ index 51cb2f84d..213d5cc7b 100644
    PetscErrorCode ierr;
    SVD_CROSS      *cross;
 diff --git a/src/svd/impls/cyclic/cyclic.c b/src/svd/impls/cyclic/cyclic.c
-index ef6446628..5907fb7b0 100644
+index 59225767f..58eca5d60 100644
 --- a/src/svd/impls/cyclic/cyclic.c
 +++ b/src/svd/impls/cyclic/cyclic.c
-@@ -501,7 +501,7 @@ PetscErrorCode SVDDestroy_Cyclic(SVD svd)
+@@ -499,7 +499,7 @@ PetscErrorCode SVDDestroy_Cyclic(SVD svd)
    PetscFunctionReturn(0);
  }
  
@@ -5551,7 +5531,7 @@ index ef6446628..5907fb7b0 100644
    PetscErrorCode ierr;
    SVD_CYCLIC     *cyclic;
 diff --git a/src/svd/impls/external/primme/svdprimme.c b/src/svd/impls/external/primme/svdprimme.c
-index a0510f53b..edfc455ee 100644
+index c510f4d4d..2529f55b1 100644
 --- a/src/svd/impls/external/primme/svdprimme.c
 +++ b/src/svd/impls/external/primme/svdprimme.c
 @@ -400,7 +400,7 @@ PetscErrorCode SVDPRIMMEGetMethod(SVD svd,SVDPRIMMEMethod *method)
@@ -5564,7 +5544,7 @@ index a0510f53b..edfc455ee 100644
    PetscErrorCode ierr;
    SVD_PRIMME     *primme;
 diff --git a/src/svd/impls/lanczos/gklanczos.c b/src/svd/impls/lanczos/gklanczos.c
-index 17baa725a..9d1270001 100644
+index 6d1b6661e..ad4037e9f 100644
 --- a/src/svd/impls/lanczos/gklanczos.c
 +++ b/src/svd/impls/lanczos/gklanczos.c
 @@ -393,7 +393,7 @@ PetscErrorCode SVDView_Lanczos(SVD svd,PetscViewer viewer)
@@ -5577,7 +5557,7 @@ index 17baa725a..9d1270001 100644
    PetscErrorCode ierr;
    SVD_LANCZOS    *ctx;
 diff --git a/src/svd/impls/lapack/svdlapack.c b/src/svd/impls/lapack/svdlapack.c
-index 1ee45d1e7..87f2a117f 100644
+index a1d96548f..adade11f2 100644
 --- a/src/svd/impls/lapack/svdlapack.c
 +++ b/src/svd/impls/lapack/svdlapack.c
 @@ -97,7 +97,7 @@ PetscErrorCode SVDSolve_LAPACK(SVD svd)
@@ -5590,7 +5570,7 @@ index 1ee45d1e7..87f2a117f 100644
    PetscFunctionBegin;
    svd->ops->setup   = SVDSetUp_LAPACK;
 diff --git a/src/svd/impls/trlanczos/trlanczos.c b/src/svd/impls/trlanczos/trlanczos.c
-index b0ab2a980..fc8f4a79b 100644
+index b9b2a2c43..3b666a683 100644
 --- a/src/svd/impls/trlanczos/trlanczos.c
 +++ b/src/svd/impls/trlanczos/trlanczos.c
 @@ -495,7 +495,7 @@ PetscErrorCode SVDView_TRLanczos(SVD svd,PetscViewer viewer)
@@ -5603,10 +5583,10 @@ index b0ab2a980..fc8f4a79b 100644
    PetscErrorCode ierr;
    SVD_TRLANCZOS  *ctx;
 diff --git a/src/svd/interface/dlregissvd.c b/src/svd/interface/dlregissvd.c
-index 21f6ab8e1..0db1299b0 100644
+index 97e8af138..1b6b55f93 100644
 --- a/src/svd/interface/dlregissvd.c
 +++ b/src/svd/interface/dlregissvd.c
-@@ -90,7 +90,7 @@ PetscErrorCode SVDInitializePackage(void)
+@@ -86,7 +86,7 @@ PetscErrorCode SVDInitializePackage(void)
    This one registers all the SVD methods that are in the basic SLEPc libslepcsvd
    library.
   */
@@ -5616,7 +5596,7 @@ index 21f6ab8e1..0db1299b0 100644
    PetscErrorCode ierr;
  
 diff --git a/src/svd/interface/ftn-custom/zsvdf.c b/src/svd/interface/ftn-custom/zsvdf.c
-index 24e3290e2..9f9a9ad65 100644
+index 69947f070..c0b2fbf8a 100644
 --- a/src/svd/interface/ftn-custom/zsvdf.c
 +++ b/src/svd/interface/ftn-custom/zsvdf.c
 @@ -92,27 +92,27 @@
@@ -5916,7 +5896,7 @@ index 24e3290e2..9f9a9ad65 100644
    svdsetinitialspaces_(svd,nr,isr,nl,isl,ierr);
  }
 diff --git a/src/svd/interface/svdregis.c b/src/svd/interface/svdregis.c
-index 8022e4004..0d3a264e7 100644
+index b40557119..6b4e51b80 100644
 --- a/src/svd/interface/svdregis.c
 +++ b/src/svd/interface/svdregis.c
 @@ -10,13 +10,13 @@
@@ -5940,7 +5920,7 @@ index 8022e4004..0d3a264e7 100644
  
  /*@C
 diff --git a/src/svd/interface/svdsetup.c b/src/svd/interface/svdsetup.c
-index 651bce2f6..0da4b6dff 100644
+index 8b091c3a2..ee3aa498c 100644
 --- a/src/svd/interface/svdsetup.c
 +++ b/src/svd/interface/svdsetup.c
 @@ -280,7 +280,7 @@ PetscErrorCode SVDSetDimensions_Default(SVD svd)
@@ -5953,10 +5933,10 @@ index 651bce2f6..0da4b6dff 100644
  
     This is called at setup after setting the value of ncv and the flag leftbasis.
 diff --git a/src/sys/classes/bv/impls/contiguous/contig.c b/src/sys/classes/bv/impls/contiguous/contig.c
-index eacffc183..381fed3fe 100644
+index 5df7a2298..561f86bc9 100644
 --- a/src/sys/classes/bv/impls/contiguous/contig.c
 +++ b/src/sys/classes/bv/impls/contiguous/contig.c
-@@ -310,7 +310,7 @@ PetscErrorCode BVDestroy_Contiguous(BV bv)
+@@ -315,7 +315,7 @@ PetscErrorCode BVDestroy_Contiguous(BV bv)
    PetscFunctionReturn(0);
  }
  
@@ -5966,10 +5946,10 @@ index eacffc183..381fed3fe 100644
    PetscErrorCode ierr;
    BV_CONTIGUOUS  *ctx;
 diff --git a/src/sys/classes/bv/impls/mat/bvmat.c b/src/sys/classes/bv/impls/mat/bvmat.c
-index 5fae0e679..7088988d3 100644
+index ec8170778..0fa4a44df 100644
 --- a/src/sys/classes/bv/impls/mat/bvmat.c
 +++ b/src/sys/classes/bv/impls/mat/bvmat.c
-@@ -404,7 +404,7 @@ PetscErrorCode BVDestroy_Mat(BV bv)
+@@ -417,7 +417,7 @@ PetscErrorCode BVDestroy_Mat(BV bv)
    PetscFunctionReturn(0);
  }
  
@@ -5979,23 +5959,36 @@ index 5fae0e679..7088988d3 100644
    PetscErrorCode ierr;
    BV_MAT         *ctx;
 diff --git a/src/sys/classes/bv/impls/svec/svec.c b/src/sys/classes/bv/impls/svec/svec.c
-index 095bead33..c8a706c8a 100644
+index bef6f509d..c44f3e008 100644
 --- a/src/sys/classes/bv/impls/svec/svec.c
 +++ b/src/sys/classes/bv/impls/svec/svec.c
-@@ -405,7 +405,7 @@ PetscErrorCode BVDestroy_Svec(BV bv)
+@@ -418,7 +418,7 @@ PetscErrorCode BVDestroy_Svec(BV bv)
    PetscFunctionReturn(0);
  }
  
 -PETSC_EXTERN PetscErrorCode BVCreate_Svec(BV bv)
 +SLEPC_EXTERN PetscErrorCode BVCreate_Svec(BV bv)
  {
+   PetscErrorCode    ierr;
+   BV_SVEC           *ctx;
+diff --git a/src/sys/classes/bv/impls/tensor/bvtensor.c b/src/sys/classes/bv/impls/tensor/bvtensor.c
+index bf4e78b3f..0401eafdc 100644
+--- a/src/sys/classes/bv/impls/tensor/bvtensor.c
++++ b/src/sys/classes/bv/impls/tensor/bvtensor.c
+@@ -838,7 +838,7 @@ PetscErrorCode BVDestroy_Tensor(BV bv)
+   PetscFunctionReturn(0);
+ }
+ 
+-PETSC_EXTERN PetscErrorCode BVCreate_Tensor(BV bv)
++SLEPC_EXTERN PetscErrorCode BVCreate_Tensor(BV bv)
+ {
    PetscErrorCode ierr;
-   BV_SVEC        *ctx;
+   BV_TENSOR      *ctx;
 diff --git a/src/sys/classes/bv/impls/vecs/vecs.c b/src/sys/classes/bv/impls/vecs/vecs.c
-index 824884943..9f7c4b798 100644
+index 7bf458bd7..8a2c8f9a6 100644
 --- a/src/sys/classes/bv/impls/vecs/vecs.c
 +++ b/src/sys/classes/bv/impls/vecs/vecs.c
-@@ -496,7 +496,7 @@ PetscErrorCode BVDuplicate_Vecs(BV V,BV *W)
+@@ -524,7 +524,7 @@ PetscErrorCode BVDuplicate_Vecs(BV V,BV W)
    PetscFunctionReturn(0);
  }
  
@@ -6004,11 +5997,24 @@ index 824884943..9f7c4b798 100644
  {
    PetscErrorCode ierr;
    BV_VECS        *ctx;
+diff --git a/src/sys/classes/bv/interface/bvlapack.c b/src/sys/classes/bv/interface/bvlapack.c
+index 4d8fbf9d7..818f74bbe 100644
+--- a/src/sys/classes/bv/interface/bvlapack.c
++++ b/src/sys/classes/bv/interface/bvlapack.c
+@@ -445,7 +445,7 @@ PetscErrorCode BVOrthogonalize_LAPACK_TSQR(BV bv,PetscInt m_,PetscInt n_,PetscSc
+     Reduction operation to compute [~,Rout]=qr([Rin1;Rin2]) in the TSQR algorithm;
+     all matrices are upper triangular stored in packed format
+ */
+-PETSC_EXTERN void SlepcGivensPacked(void *in,void *inout,PetscMPIInt *len,MPI_Datatype *datatype)
++SLEPC_EXTERN void SlepcGivensPacked(void *in,void *inout,PetscMPIInt *len,MPI_Datatype *datatype)
+ {
+   PetscErrorCode ierr;
+   PetscBLASInt   n,i,j,k,one=1;
 diff --git a/src/sys/classes/bv/interface/bvregis.c b/src/sys/classes/bv/interface/bvregis.c
-index cc2463b07..22d299743 100644
+index 8d3251e0d..c4b8b5bfd 100644
 --- a/src/sys/classes/bv/interface/bvregis.c
 +++ b/src/sys/classes/bv/interface/bvregis.c
-@@ -10,10 +10,10 @@
+@@ -10,11 +10,11 @@
  
  #include <slepc/private/bvimpl.h>          /*I   "slepcbv.h"   I*/
  
@@ -6016,15 +6022,17 @@ index cc2463b07..22d299743 100644
 -PETSC_EXTERN PetscErrorCode BVCreate_Contiguous(BV);
 -PETSC_EXTERN PetscErrorCode BVCreate_Svec(BV);
 -PETSC_EXTERN PetscErrorCode BVCreate_Mat(BV);
+-PETSC_EXTERN PetscErrorCode BVCreate_Tensor(BV);
 +SLEPC_EXTERN PetscErrorCode BVCreate_Vecs(BV);
 +SLEPC_EXTERN PetscErrorCode BVCreate_Contiguous(BV);
 +SLEPC_EXTERN PetscErrorCode BVCreate_Svec(BV);
 +SLEPC_EXTERN PetscErrorCode BVCreate_Mat(BV);
++SLEPC_EXTERN PetscErrorCode BVCreate_Tensor(BV);
  
  /*@C
     BVRegisterAll - Registers all of the storage variants in the BV package.
 diff --git a/src/sys/classes/bv/interface/ftn-custom/zbvf.c b/src/sys/classes/bv/interface/ftn-custom/zbvf.c
-index 4224886ae..2d5510db4 100644
+index 9ca88f539..7dc176c20 100644
 --- a/src/sys/classes/bv/interface/ftn-custom/zbvf.c
 +++ b/src/sys/classes/bv/interface/ftn-custom/zbvf.c
 @@ -27,7 +27,7 @@
@@ -6082,7 +6090,7 @@ index 4224886ae..2d5510db4 100644
    PetscViewer v;
    PetscPatchDefaultViewers_Fortran(viewer,v);
 diff --git a/src/sys/classes/ds/impls/ghep/dsghep.c b/src/sys/classes/ds/impls/ghep/dsghep.c
-index 5fd2eaaac..76dd4bcfe 100644
+index 84cfc132b..9d3cd7bd7 100644
 --- a/src/sys/classes/ds/impls/ghep/dsghep.c
 +++ b/src/sys/classes/ds/impls/ghep/dsghep.c
 @@ -212,7 +212,7 @@ PetscErrorCode DSHermitian_GHEP(DS ds,DSMatType m,PetscBool *flg)
@@ -6095,7 +6103,7 @@ index 5fd2eaaac..76dd4bcfe 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_GHEP;
 diff --git a/src/sys/classes/ds/impls/ghiep/dsghiep.c b/src/sys/classes/ds/impls/ghiep/dsghiep.c
-index 445e3017f..517d1c2b9 100644
+index f966afa5d..2cc1f1ec6 100644
 --- a/src/sys/classes/ds/impls/ghiep/dsghiep.c
 +++ b/src/sys/classes/ds/impls/ghiep/dsghiep.c
 @@ -933,7 +933,7 @@ PetscErrorCode DSHermitian_GHIEP(DS ds,DSMatType m,PetscBool *flg)
@@ -6108,7 +6116,7 @@ index 445e3017f..517d1c2b9 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_GHIEP;
 diff --git a/src/sys/classes/ds/impls/gnhep/dsgnhep.c b/src/sys/classes/ds/impls/gnhep/dsgnhep.c
-index dbf60ffb0..989388748 100644
+index ee8cf9d93..7b2d47483 100644
 --- a/src/sys/classes/ds/impls/gnhep/dsgnhep.c
 +++ b/src/sys/classes/ds/impls/gnhep/dsgnhep.c
 @@ -595,7 +595,7 @@ PetscErrorCode DSSynchronize_GNHEP(DS ds,PetscScalar eigr[],PetscScalar eigi[])
@@ -6121,7 +6129,7 @@ index dbf60ffb0..989388748 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_GNHEP;
 diff --git a/src/sys/classes/ds/impls/hep/dshep.c b/src/sys/classes/ds/impls/hep/dshep.c
-index 8470c7b2c..eee59df93 100644
+index aca136a89..aed8762c8 100644
 --- a/src/sys/classes/ds/impls/hep/dshep.c
 +++ b/src/sys/classes/ds/impls/hep/dshep.c
 @@ -855,7 +855,7 @@ PetscErrorCode DSHermitian_HEP(DS ds,DSMatType m,PetscBool *flg)
@@ -6134,7 +6142,7 @@ index 8470c7b2c..eee59df93 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_HEP;
 diff --git a/src/sys/classes/ds/impls/nep/dsnep.c b/src/sys/classes/ds/impls/nep/dsnep.c
-index a7d5a5a84..9519841b5 100644
+index 9e9360a3c..25ab626d1 100644
 --- a/src/sys/classes/ds/impls/nep/dsnep.c
 +++ b/src/sys/classes/ds/impls/nep/dsnep.c
 @@ -460,7 +460,7 @@ PetscErrorCode DSDestroy_NEP(DS ds)
@@ -6147,7 +6155,7 @@ index a7d5a5a84..9519841b5 100644
    DS_NEP         *ctx;
    PetscErrorCode ierr;
 diff --git a/src/sys/classes/ds/impls/nhep/dsnhep.c b/src/sys/classes/ds/impls/nhep/dsnhep.c
-index 894eebdff..a31091738 100644
+index 1e60757f0..72bb0b5b7 100644
 --- a/src/sys/classes/ds/impls/nhep/dsnhep.c
 +++ b/src/sys/classes/ds/impls/nhep/dsnhep.c
 @@ -777,7 +777,7 @@ PetscErrorCode DSTranslateHarmonic_NHEP(DS ds,PetscScalar tau,PetscReal beta,Pet
@@ -6160,10 +6168,10 @@ index 894eebdff..a31091738 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_NHEP;
 diff --git a/src/sys/classes/ds/impls/pep/dspep.c b/src/sys/classes/ds/impls/pep/dspep.c
-index cc68fdc84..02d65fa22 100644
+index fcf3c9f04..ead4be7c1 100644
 --- a/src/sys/classes/ds/impls/pep/dspep.c
 +++ b/src/sys/classes/ds/impls/pep/dspep.c
-@@ -372,7 +372,7 @@ PetscErrorCode DSMatGetSize_PEP(DS ds,DSMatType t,PetscInt *rows,PetscInt *cols)
+@@ -509,7 +509,7 @@ PetscErrorCode DSMatGetSize_PEP(DS ds,DSMatType t,PetscInt *rows,PetscInt *cols)
    PetscFunctionReturn(0);
  }
  
@@ -6172,8 +6180,28 @@ index cc68fdc84..02d65fa22 100644
  {
    DS_PEP         *ctx;
    PetscErrorCode ierr;
+diff --git a/src/sys/classes/ds/impls/pep/ftn-custom/zdspepf.c b/src/sys/classes/ds/impls/pep/ftn-custom/zdspepf.c
+index d45161837..57d1e7ddf 100644
+--- a/src/sys/classes/ds/impls/pep/ftn-custom/zdspepf.c
++++ b/src/sys/classes/ds/impls/pep/ftn-custom/zdspepf.c
+@@ -19,13 +19,13 @@
+ #define dspepgetcoefficients_    dspepgetcoefficients
+ #endif
+ 
+-PETSC_EXTERN void PETSC_STDCALL dspepsetcoefficients_(DS *ds,PetscReal *pbc,PetscErrorCode *ierr)
++SLEPC_EXTERN void PETSC_STDCALL dspepsetcoefficients_(DS *ds,PetscReal *pbc,PetscErrorCode *ierr)
+ {
+   CHKFORTRANNULLREAL(pbc);
+   *ierr = DSPEPSetCoefficients(*ds,pbc);
+ }
+ 
+-PETSC_EXTERN void PETSC_STDCALL dspepgetcoefficients_(DS *ds,PetscReal *pbc,PetscErrorCode *ierr)
++SLEPC_EXTERN void PETSC_STDCALL dspepgetcoefficients_(DS *ds,PetscReal *pbc,PetscErrorCode *ierr)
+ {
+   PetscReal *opbc;
+   PetscInt  d;
 diff --git a/src/sys/classes/ds/impls/svd/dssvd.c b/src/sys/classes/ds/impls/svd/dssvd.c
-index c1cfe4c4c..37cefc900 100644
+index 9e1e8d96e..fc82b3530 100644
 --- a/src/sys/classes/ds/impls/svd/dssvd.c
 +++ b/src/sys/classes/ds/impls/svd/dssvd.c
 @@ -356,7 +356,7 @@ PetscErrorCode DSMatGetSize_SVD(DS ds,DSMatType t,PetscInt *rows,PetscInt *cols)
@@ -6186,7 +6214,7 @@ index c1cfe4c4c..37cefc900 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_SVD;
 diff --git a/src/sys/classes/ds/interface/dsbasic.c b/src/sys/classes/ds/interface/dsbasic.c
-index 49fba197f..309890b74 100644
+index 1fc1b041f..058f545ac 100644
 --- a/src/sys/classes/ds/interface/dsbasic.c
 +++ b/src/sys/classes/ds/interface/dsbasic.c
 @@ -927,14 +927,14 @@ PetscErrorCode DSRegister(const char *name,PetscErrorCode (*function)(DS))
@@ -6213,7 +6241,7 @@ index 49fba197f..309890b74 100644
  /*@C
     DSRegisterAll - Registers all of the direct solvers in the DS package.
 diff --git a/src/sys/classes/ds/interface/ftn-custom/zdsf.c b/src/sys/classes/ds/interface/ftn-custom/zdsf.c
-index c64e6a1c3..b1fef4c74 100644
+index 8329e167c..2fb59febf 100644
 --- a/src/sys/classes/ds/interface/ftn-custom/zdsf.c
 +++ b/src/sys/classes/ds/interface/ftn-custom/zdsf.c
 @@ -33,7 +33,7 @@
@@ -6295,10 +6323,10 @@ index c64e6a1c3..b1fef4c74 100644
    CHKFORTRANNULLSCALAR(eigr);
    CHKFORTRANNULLSCALAR(eigi);
 diff --git a/src/sys/classes/fn/impls/combine/fncombine.c b/src/sys/classes/fn/impls/combine/fncombine.c
-index 5105b0e7a..b40037a7b 100644
+index 9419f0a95..b254c8fb9 100644
 --- a/src/sys/classes/fn/impls/combine/fncombine.c
 +++ b/src/sys/classes/fn/impls/combine/fncombine.c
-@@ -375,7 +375,7 @@ PetscErrorCode FNDestroy_Combine(FN fn)
+@@ -373,7 +373,7 @@ PetscErrorCode FNDestroy_Combine(FN fn)
    PetscFunctionReturn(0);
  }
  
@@ -6308,10 +6336,10 @@ index 5105b0e7a..b40037a7b 100644
    PetscErrorCode ierr;
    FN_COMBINE     *ctx;
 diff --git a/src/sys/classes/fn/impls/exp/fnexp.c b/src/sys/classes/fn/impls/exp/fnexp.c
-index 426d3c568..689a63358 100644
+index b63d40a67..a27dcf9e6 100644
 --- a/src/sys/classes/fn/impls/exp/fnexp.c
 +++ b/src/sys/classes/fn/impls/exp/fnexp.c
-@@ -550,7 +550,7 @@ PetscErrorCode FNView_Exp(FN fn,PetscViewer viewer)
+@@ -1183,7 +1183,7 @@ PetscErrorCode FNView_Exp(FN fn,PetscViewer viewer)
    PetscFunctionReturn(0);
  }
  
@@ -6321,7 +6349,7 @@ index 426d3c568..689a63358 100644
    PetscFunctionBegin;
    fn->ops->evaluatefunction       = FNEvaluateFunction_Exp;
 diff --git a/src/sys/classes/fn/impls/invsqrt/fninvsqrt.c b/src/sys/classes/fn/impls/invsqrt/fninvsqrt.c
-index 06b0ce6d5..ebf297dc6 100644
+index 4b5a0c7cc..1f6b41457 100644
 --- a/src/sys/classes/fn/impls/invsqrt/fninvsqrt.c
 +++ b/src/sys/classes/fn/impls/invsqrt/fninvsqrt.c
 @@ -182,7 +182,7 @@ PetscErrorCode FNView_Invsqrt(FN fn,PetscViewer viewer)
@@ -6334,7 +6362,7 @@ index 06b0ce6d5..ebf297dc6 100644
    PetscFunctionBegin;
    fn->ops->evaluatefunction          = FNEvaluateFunction_Invsqrt;
 diff --git a/src/sys/classes/fn/impls/log/fnlog.c b/src/sys/classes/fn/impls/log/fnlog.c
-index 5b4a091d0..d140a7aa3 100644
+index 952def452..474b5a01f 100644
 --- a/src/sys/classes/fn/impls/log/fnlog.c
 +++ b/src/sys/classes/fn/impls/log/fnlog.c
 @@ -66,7 +66,7 @@ PetscErrorCode FNView_Log(FN fn,PetscViewer viewer)
@@ -6347,7 +6375,7 @@ index 5b4a091d0..d140a7aa3 100644
    PetscFunctionBegin;
    fn->ops->evaluatefunction    = FNEvaluateFunction_Log;
 diff --git a/src/sys/classes/fn/impls/phi/fnphi.c b/src/sys/classes/fn/impls/phi/fnphi.c
-index ea89cfe0f..6443239a0 100644
+index f726ed584..393ff0579 100644
 --- a/src/sys/classes/fn/impls/phi/fnphi.c
 +++ b/src/sys/classes/fn/impls/phi/fnphi.c
 @@ -218,7 +218,7 @@ PetscErrorCode FNDestroy_Phi(FN fn)
@@ -6360,7 +6388,7 @@ index ea89cfe0f..6443239a0 100644
    PetscErrorCode ierr;
    FN_PHI         *ctx;
 diff --git a/src/sys/classes/fn/impls/rational/fnrational.c b/src/sys/classes/fn/impls/rational/fnrational.c
-index f50ec64b7..7b65b2db3 100644
+index d8ffb9f73..e83bd68cb 100644
 --- a/src/sys/classes/fn/impls/rational/fnrational.c
 +++ b/src/sys/classes/fn/impls/rational/fnrational.c
 @@ -507,7 +507,7 @@ PetscErrorCode FNDestroy_Rational(FN fn)
@@ -6373,7 +6401,7 @@ index f50ec64b7..7b65b2db3 100644
    PetscErrorCode ierr;
    FN_RATIONAL    *ctx;
 diff --git a/src/sys/classes/fn/impls/rational/ftn-custom/zrational.c b/src/sys/classes/fn/impls/rational/ftn-custom/zrational.c
-index 27a856d00..2e6e3383b 100644
+index dd3e9ab64..cb180273e 100644
 --- a/src/sys/classes/fn/impls/rational/ftn-custom/zrational.c
 +++ b/src/sys/classes/fn/impls/rational/ftn-custom/zrational.c
 @@ -39,39 +39,39 @@
@@ -6484,7 +6512,7 @@ index 27a856d00..2e6e3383b 100644
    fnrationalgetdenominator_(fn,nq,qcoeff,ierr);
  }
 diff --git a/src/sys/classes/fn/impls/sqrt/fnsqrt.c b/src/sys/classes/fn/impls/sqrt/fnsqrt.c
-index d3726a8f5..24618bb19 100644
+index 51a9aaeea..36bb4bc0b 100644
 --- a/src/sys/classes/fn/impls/sqrt/fnsqrt.c
 +++ b/src/sys/classes/fn/impls/sqrt/fnsqrt.c
 @@ -256,7 +256,7 @@ PetscErrorCode FNView_Sqrt(FN fn,PetscViewer viewer)
@@ -6497,7 +6525,7 @@ index d3726a8f5..24618bb19 100644
    PetscFunctionBegin;
    fn->ops->evaluatefunction          = FNEvaluateFunction_Sqrt;
 diff --git a/src/sys/classes/fn/interface/fnregis.c b/src/sys/classes/fn/interface/fnregis.c
-index c4f7fe7bf..f545ffaa3 100644
+index ce3cd1008..7330035b9 100644
 --- a/src/sys/classes/fn/interface/fnregis.c
 +++ b/src/sys/classes/fn/interface/fnregis.c
 @@ -10,13 +10,13 @@
@@ -6522,7 +6550,7 @@ index c4f7fe7bf..f545ffaa3 100644
  /*@C
     FNRegisterAll - Registers all of the math functions in the FN package.
 diff --git a/src/sys/classes/fn/interface/ftn-custom/zfnf.c b/src/sys/classes/fn/interface/ftn-custom/zfnf.c
-index 1c92b087f..628614c80 100644
+index 881eff566..ec526bffd 100644
 --- a/src/sys/classes/fn/interface/ftn-custom/zfnf.c
 +++ b/src/sys/classes/fn/interface/ftn-custom/zfnf.c
 @@ -28,14 +28,14 @@
@@ -6579,10 +6607,10 @@ index 1c92b087f..628614c80 100644
    FNType tname;
  
 diff --git a/src/sys/classes/rg/impls/ellipse/rgellipse.c b/src/sys/classes/rg/impls/ellipse/rgellipse.c
-index 2b7c27eaa..1b26f13a6 100644
+index 52ad8117c..abde92468 100644
 --- a/src/sys/classes/rg/impls/ellipse/rgellipse.c
 +++ b/src/sys/classes/rg/impls/ellipse/rgellipse.c
-@@ -220,7 +220,7 @@ PetscErrorCode RGDestroy_Ellipse(RG rg)
+@@ -249,7 +249,7 @@ PetscErrorCode RGDestroy_Ellipse(RG rg)
    PetscFunctionReturn(0);
  }
  
@@ -6592,10 +6620,10 @@ index 2b7c27eaa..1b26f13a6 100644
    RG_ELLIPSE     *ellipse;
    PetscErrorCode ierr;
 diff --git a/src/sys/classes/rg/impls/interval/rginterval.c b/src/sys/classes/rg/impls/interval/rginterval.c
-index d911ad7ed..567c56674 100644
+index da9f589bb..db7814663 100644
 --- a/src/sys/classes/rg/impls/interval/rginterval.c
 +++ b/src/sys/classes/rg/impls/interval/rginterval.c
-@@ -250,7 +250,7 @@ PetscErrorCode RGDestroy_Interval(RG rg)
+@@ -280,7 +280,7 @@ PetscErrorCode RGDestroy_Interval(RG rg)
    PetscFunctionReturn(0);
  }
  
@@ -6605,10 +6633,10 @@ index d911ad7ed..567c56674 100644
    RG_INTERVAL    *interval;
    PetscErrorCode ierr;
 diff --git a/src/sys/classes/rg/impls/polygon/rgpolygon.c b/src/sys/classes/rg/impls/polygon/rgpolygon.c
-index 8407fbe52..95bee38bc 100644
+index e914bb03e..2742759aa 100644
 --- a/src/sys/classes/rg/impls/polygon/rgpolygon.c
 +++ b/src/sys/classes/rg/impls/polygon/rgpolygon.c
-@@ -380,7 +380,7 @@ PetscErrorCode RGDestroy_Polygon(RG rg)
+@@ -430,7 +430,7 @@ PetscErrorCode RGDestroy_Polygon(RG rg)
    PetscFunctionReturn(0);
  }
  
@@ -6618,10 +6646,10 @@ index 8407fbe52..95bee38bc 100644
    RG_POLYGON     *polygon;
    PetscErrorCode ierr;
 diff --git a/src/sys/classes/rg/impls/ring/rgring.c b/src/sys/classes/rg/impls/ring/rgring.c
-index da08e70fe..4ac13ec09 100644
+index 5f8187174..b0dc9540e 100644
 --- a/src/sys/classes/rg/impls/ring/rgring.c
 +++ b/src/sys/classes/rg/impls/ring/rgring.c
-@@ -324,7 +324,7 @@ PetscErrorCode RGDestroy_Ring(RG rg)
+@@ -373,7 +373,7 @@ PetscErrorCode RGDestroy_Ring(RG rg)
    PetscFunctionReturn(0);
  }
  
@@ -6631,7 +6659,7 @@ index da08e70fe..4ac13ec09 100644
    RG_RING        *ring;
    PetscErrorCode ierr;
 diff --git a/src/sys/classes/rg/interface/ftn-custom/zrgf.c b/src/sys/classes/rg/interface/ftn-custom/zrgf.c
-index ddc3144e1..f615f9ee9 100644
+index 317ab20d9..4ebbf1f0e 100644
 --- a/src/sys/classes/rg/interface/ftn-custom/zrgf.c
 +++ b/src/sys/classes/rg/interface/ftn-custom/zrgf.c
 @@ -27,7 +27,7 @@
@@ -6689,7 +6717,7 @@ index ddc3144e1..f615f9ee9 100644
    PetscViewer v;
    PetscPatchDefaultViewers_Fortran(viewer,v);
 diff --git a/src/sys/classes/rg/interface/rgregis.c b/src/sys/classes/rg/interface/rgregis.c
-index 7b4fa01d2..f1c0f0531 100644
+index 88abfd961..942e51095 100644
 --- a/src/sys/classes/rg/interface/rgregis.c
 +++ b/src/sys/classes/rg/interface/rgregis.c
 @@ -10,10 +10,10 @@
@@ -6708,7 +6736,7 @@ index 7b4fa01d2..f1c0f0531 100644
  /*@C
     RGRegisterAll - Registers all of the regions in the RG package.
 diff --git a/src/sys/classes/st/impls/cayley/cayley.c b/src/sys/classes/st/impls/cayley/cayley.c
-index 63eb104ec..1be278698 100644
+index 592170bd6..a3778f387 100644
 --- a/src/sys/classes/st/impls/cayley/cayley.c
 +++ b/src/sys/classes/st/impls/cayley/cayley.c
 @@ -345,7 +345,7 @@ PetscErrorCode STDestroy_Cayley(ST st)
@@ -6721,7 +6749,7 @@ index 63eb104ec..1be278698 100644
    PetscErrorCode ierr;
    ST_CAYLEY      *ctx;
 diff --git a/src/sys/classes/st/impls/filter/filter.c b/src/sys/classes/st/impls/filter/filter.c
-index b7294fce8..0a07f411c 100644
+index 97e105b26..df596402a 100644
 --- a/src/sys/classes/st/impls/filter/filter.c
 +++ b/src/sys/classes/st/impls/filter/filter.c
 @@ -408,7 +408,7 @@ PetscErrorCode STDestroy_Filter(ST st)
@@ -6734,7 +6762,7 @@ index b7294fce8..0a07f411c 100644
    PetscErrorCode ierr;
    ST_FILTER      *ctx;
 diff --git a/src/sys/classes/st/impls/precond/precond.c b/src/sys/classes/st/impls/precond/precond.c
-index 7cca6387c..0e5d2c0d6 100644
+index f814ac9f3..19929b76e 100644
 --- a/src/sys/classes/st/impls/precond/precond.c
 +++ b/src/sys/classes/st/impls/precond/precond.c
 @@ -330,7 +330,7 @@ PetscErrorCode STDestroy_Precond(ST st)
@@ -6747,7 +6775,7 @@ index 7cca6387c..0e5d2c0d6 100644
    PetscErrorCode ierr;
    ST_PRECOND     *ctx;
 diff --git a/src/sys/classes/st/impls/shell/ftn-custom/zshell.c b/src/sys/classes/st/impls/shell/ftn-custom/zshell.c
-index c03429b6b..6f15086ac 100644
+index 0cc9c7773..954c0ced6 100644
 --- a/src/sys/classes/st/impls/shell/ftn-custom/zshell.c
 +++ b/src/sys/classes/st/impls/shell/ftn-custom/zshell.c
 @@ -45,24 +45,24 @@ static PetscErrorCode ourshellbacktransform(ST st,PetscInt n,PetscScalar *eigr,P
@@ -6780,7 +6808,7 @@ index c03429b6b..6f15086ac 100644
    *ierr = PetscObjectSetFortranCallback((PetscObject)*st,PETSC_FORTRAN_CALLBACK_CLASS,&_cb.backtransform,(PetscVoidFunction)backtransform,NULL); if (*ierr) return;
    *ierr = STShellSetBackTransform(*st,ourshellbacktransform);
 diff --git a/src/sys/classes/st/impls/shell/shell.c b/src/sys/classes/st/impls/shell/shell.c
-index 91edc3b94..6ef5af5cf 100644
+index 46b0a8d48..f6e706068 100644
 --- a/src/sys/classes/st/impls/shell/shell.c
 +++ b/src/sys/classes/st/impls/shell/shell.c
 @@ -294,7 +294,7 @@ $             STShellSetBackTransform(st,backtr);    (optional)
@@ -6793,7 +6821,7 @@ index 91edc3b94..6ef5af5cf 100644
    PetscErrorCode ierr;
    ST_SHELL       *ctx;
 diff --git a/src/sys/classes/st/impls/shift/shift.c b/src/sys/classes/st/impls/shift/shift.c
-index eb5ec9359..b9b56799c 100644
+index 407ca7f89..55966e47c 100644
 --- a/src/sys/classes/st/impls/shift/shift.c
 +++ b/src/sys/classes/st/impls/shift/shift.c
 @@ -145,7 +145,7 @@ PetscErrorCode STSetShift_Shift(ST st,PetscScalar newshift)
@@ -6806,7 +6834,7 @@ index eb5ec9359..b9b56799c 100644
    PetscFunctionBegin;
    st->ops->apply           = STApply_Shift;
 diff --git a/src/sys/classes/st/impls/sinvert/sinvert.c b/src/sys/classes/st/impls/sinvert/sinvert.c
-index 30f766076..677f7b273 100644
+index 6e57f2a08..9ee8ce260 100644
 --- a/src/sys/classes/st/impls/sinvert/sinvert.c
 +++ b/src/sys/classes/st/impls/sinvert/sinvert.c
 @@ -168,7 +168,7 @@ PetscErrorCode STSetShift_Sinvert(ST st,PetscScalar newshift)
@@ -6819,7 +6847,7 @@ index 30f766076..677f7b273 100644
    PetscFunctionBegin;
    st->ops->apply           = STApply_Sinvert;
 diff --git a/src/sys/classes/st/interface/ftn-custom/zstf.c b/src/sys/classes/st/interface/ftn-custom/zstf.c
-index 34afaac60..6d135f701 100644
+index b55bfbb91..2c29f9484 100644
 --- a/src/sys/classes/st/interface/ftn-custom/zstf.c
 +++ b/src/sys/classes/st/interface/ftn-custom/zstf.c
 @@ -27,7 +27,7 @@
@@ -6877,7 +6905,7 @@ index 34afaac60..6d135f701 100644
    PetscViewer v;
    PetscPatchDefaultViewers_Fortran(viewer,v);
 diff --git a/src/sys/classes/st/interface/stregis.c b/src/sys/classes/st/interface/stregis.c
-index a85e37c99..b0df8f843 100644
+index bc38017bb..155b75447 100644
 --- a/src/sys/classes/st/interface/stregis.c
 +++ b/src/sys/classes/st/interface/stregis.c
 @@ -10,12 +10,12 @@
@@ -6900,7 +6928,7 @@ index a85e37c99..b0df8f843 100644
  /*@C
     STRegisterAll - Registers all of the spectral transformations in the ST package.
 diff --git a/src/sys/classes/st/interface/stsolve.c b/src/sys/classes/st/interface/stsolve.c
-index b18ba2cce..0cd225bb4 100644
+index fcd29adc1..0a6e64275 100644
 --- a/src/sys/classes/st/interface/stsolve.c
 +++ b/src/sys/classes/st/interface/stsolve.c
 @@ -527,7 +527,7 @@ PetscErrorCode STMatSetUp(ST st,PetscScalar sigma,PetscScalar *coeffs)
@@ -6913,7 +6941,7 @@ index b18ba2cce..0cd225bb4 100644
     Level: developer
  @*/
 diff --git a/src/sys/dlregisslepc.c b/src/sys/dlregisslepc.c
-index a2a5ffb56..2da90bc6e 100644
+index c0ded3424..1716ce46e 100644
 --- a/src/sys/dlregisslepc.c
 +++ b/src/sys/dlregisslepc.c
 @@ -17,12 +17,12 @@
@@ -6948,7 +6976,7 @@ index a2a5ffb56..2da90bc6e 100644
  {
    PetscErrorCode ierr;
 diff --git a/src/sys/ftn-custom/zslepc_start.c b/src/sys/ftn-custom/zslepc_start.c
-index 7ed21e592..86a64d759 100644
+index 096270972..b2f9d449b 100644
 --- a/src/sys/ftn-custom/zslepc_start.c
 +++ b/src/sys/ftn-custom/zslepc_start.c
 @@ -26,8 +26,8 @@
@@ -6978,7 +7006,7 @@ index 7ed21e592..86a64d759 100644
    slepcinitialize_internal(NULL,(PetscInt)0,PETSC_FALSE,ierr);
  }
 diff --git a/src/sys/ftn-custom/zslepc_startf.c b/src/sys/ftn-custom/zslepc_startf.c
-index 301d14bb1..e12bc4fc1 100644
+index af71c45f4..4cd94e5b8 100644
 --- a/src/sys/ftn-custom/zslepc_startf.c
 +++ b/src/sys/ftn-custom/zslepc_startf.c
 @@ -9,6 +9,7 @@
@@ -6999,7 +7027,7 @@ index 301d14bb1..e12bc4fc1 100644
    *info = SlepcInitializeFortran();
  }
 diff --git a/src/sys/ftn-custom/zslepcutil.c b/src/sys/ftn-custom/zslepcutil.c
-index f29decb27..948adab5d 100644
+index 7c58b30cf..f672e766a 100644
 --- a/src/sys/ftn-custom/zslepcutil.c
 +++ b/src/sys/ftn-custom/zslepcutil.c
 @@ -23,25 +23,25 @@
@@ -7033,7 +7061,7 @@ index f29decb27..948adab5d 100644
    CHKFORTRANNULLINTEGER(major);
    CHKFORTRANNULLINTEGER(minor);
 diff --git a/src/sys/slepcinit.c b/src/sys/slepcinit.c
-index 53f8c2c22..fea91b7d6 100644
+index 4eee339ba..55ed73d46 100644
 --- a/src/sys/slepcinit.c
 +++ b/src/sys/slepcinit.c
 @@ -323,8 +323,6 @@ PetscErrorCode SlepcInitialized(PetscBool *isInitialized)
@@ -7046,10 +7074,19 @@ index 53f8c2c22..fea91b7d6 100644
     SlepcInitializeNoPointers - Calls SlepcInitialize() from C/C++ without the pointers
     to argc and args (analogue to PetscInitializeNoPointers).
 diff --git a/src/sys/vec/veccomp.c b/src/sys/vec/veccomp.c
-index bcd9dd887..e4eca5387 100644
+index 05f58847a..9042babdf 100644
 --- a/src/sys/vec/veccomp.c
 +++ b/src/sys/vec/veccomp.c
-@@ -280,7 +280,7 @@ static PetscErrorCode VecCreate_Comp_Private(Vec v,Vec *x,PetscInt nx,PetscBool
+@@ -61,7 +61,7 @@ PETSC_STATIC_INLINE void AddNorm2(PetscReal *ssq,PetscReal *scale,PetscReal x)
+   }
+ }
+ 
+-PETSC_EXTERN void SlepcSumNorm2_Local(void *in,void *out,PetscMPIInt *cnt,MPI_Datatype *datatype)
++SLEPC_EXTERN void SlepcSumNorm2_Local(void *in,void *out,PetscMPIInt *cnt,MPI_Datatype *datatype)
+ {
+   PetscInt  i,count = *cnt;
+   PetscReal *xin = (PetscReal*)in,*xout = (PetscReal*)out;
+@@ -279,7 +279,7 @@ static PetscErrorCode VecCreate_Comp_Private(Vec v,Vec *x,PetscInt nx,PetscBool
    PetscFunctionReturn(0);
  }
  
@@ -7059,5 +7096,5 @@ index bcd9dd887..e4eca5387 100644
    PetscErrorCode ierr;
  
 -- 
-2.15.1.windows.2
+2.16.3.windows.1
 
