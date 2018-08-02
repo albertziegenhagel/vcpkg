@@ -1,10 +1,13 @@
 Source: petsc
-Version: 3.9.0
+Version: 3.9.3
 Description: Portable, Extensible Toolkit for Scientific Computation
 Build-Depends: reference-lapack, msmpi
 
 Feature: fortran
 Description: Fortran support for PETSc
+
+Feature: complex
+Description: Complex scalar support for PETSc
 
 Feature: scalapack
 Description: ScaLAPACK support for PETSc

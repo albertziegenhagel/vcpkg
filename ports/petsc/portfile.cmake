@@ -1,10 +1,10 @@
 include(vcpkg_common_functions)
-set(PETSC_VERSION 3.9.0)
+set(PETSC_VERSION 3.9.3)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/petsc-${PETSC_VERSION})
 vcpkg_download_distfile(ARCHIVE
     URLS "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-${PETSC_VERSION}.tar.gz"
     FILENAME "petsc-${PETSC_VERSION}.tar.gz"
-    SHA512 3bb85282b86d3fc3117a8b6641ebce0957a925b0207b8ab190e1cee9b195487e866f73aa88fa7fcb51deb9656d7722166a104f60cf65cdc62a9e92b44be18940
+    SHA512 d9d8f8f7d596c6a3ef9c242f4f17c1b6c2b5955bde15c0a19108cc46d38d78103022530628237d0c3a1047def07ddaafbf3814db5144fd3e838a30d5c98628c4
 )
 
 # Prepare msys
@@ -32,22 +32,34 @@ to_msys_path("${CURRENT_INSTALLED_DIR}/include"   VCPKG_INSTALL_INCLUDE_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/lib"       VCPKG_INSTALL_RELEASE_LIB_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/debug/lib" VCPKG_INSTALL_DEBUG_LIB_DIR)
 
-# Extract the source code with `tar` from MSYS
+# Extract the source code with `7z`
 # We can not use vcpkg_extract_source_archive here, since the archive
 # includes symbolic links that are simply skipped by `cmake -E tar`
+vcpkg_find_acquire_program(7Z)
 set(EXTRACTION_DIR "${CURRENT_BUILDTREES_DIR}/src")
 get_filename_component(ARCHIVE_FILENAME ${ARCHIVE} NAME)
 if(NOT EXISTS ${EXTRACTION_DIR}/${ARCHIVE_FILENAME}.extracted)
     message(STATUS "Extracting source ${ARCHIVE}")
     file(MAKE_DIRECTORY ${EXTRACTION_DIR})
     vcpkg_execute_required_process(
-        COMMAND ${BASH} --noprofile --norc "${CMAKE_CURRENT_LIST_DIR}\\extract.sh" ${ARCHIVE}
+        COMMAND ${7Z} x ${ARCHIVE} -y
         WORKING_DIRECTORY ${EXTRACTION_DIR}
-        LOGNAME extract
+        LOGNAME extract-1
+    )
+    vcpkg_execute_required_process(
+        COMMAND ${7Z} x petsc-${PETSC_VERSION}.tar -y
+        WORKING_DIRECTORY ${EXTRACTION_DIR}
+        LOGNAME extract-2
     )
     file(WRITE ${EXTRACTION_DIR}/${ARCHIVE_FILENAME}.extracted)
 endif()
 message(STATUS "Extracting done")
+
+vcpkg_apply_patches(
+    SOURCE_PATH ${SOURCE_PATH}
+    PATCHES
+        ${CMAKE_CURRENT_LIST_DIR}/fix-memmove.patch
+)
 
 # Select compilers
 set(PETSC_C_COMPILER "win32fe cl")
@@ -200,6 +212,22 @@ if("hdf5" IN_LIST FEATURES)
     list(APPEND OPTIONS "--with-hdf5-include=${VCPKG_INSTALL_INCLUDE_DIR}")
     list(APPEND OPTIONS_RELEASE "--with-hdf5-lib=[${VCPKG_INSTALL_RELEASE_LIB_DIR}/hdf5.lib,${VCPKG_INSTALL_RELEASE_LIB_DIR}/hdf5_hl.lib]")
     list(APPEND OPTIONS_DEBUG "--with-hdf5-lib=[${VCPKG_INSTALL_DEBUG_LIB_DIR}/hdf5_D.lib,${VCPKG_INSTALL_DEBUG_LIB_DIR}/hdf5_hl_D.lib]")
+
+    if(VCPKG_LIBRARY_LINKAGE STREQUAL "dynamic")
+        vcpkg_apply_patches(
+            SOURCE_PATH ${SOURCE_PATH}
+            PATCHES
+                ${CMAKE_CURRENT_LIST_DIR}/use-dynamic-hdf5.patch
+        )
+    endif()
+endif()
+
+if("complex" IN_LIST FEATURES)
+    list(APPEND OPTIONS "--with-scalar-type=complex")
+    
+    if("hypre" IN_LIST FEATURES)
+        message(FATAL_ERROR "HYPRE cannot be used when building PETSc with complex scalars. Please disable HYPRE.")
+    endif()
 endif()
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "dynamic")
@@ -227,6 +255,9 @@ vcpkg_execute_required_process(
     WORKING_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg
     LOGNAME build-${TARGET_TRIPLET}-dbg
 )
+
+# Remove examples
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/share/petsc/examples)
 
 # Remove the generated executables
 file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/tools)

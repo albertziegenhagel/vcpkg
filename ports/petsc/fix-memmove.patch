@@ -1,0 +1,19 @@
+--- a/config/PETSc/Configure.py	Mon Jul 02 17:58:27 2018
++++ b/config/PETSc/Configure.py	Wed Aug 01 14:50:35 2018
+@@ -146,7 +146,7 @@
+                                             'sys/socket','sys/wait','netinet/in','netdb','Direct','time','Ws2tcpip','sys/types',
+                                             'WindowsX', 'cxxabi','float','ieeefp','stdint','sched','pthread','inttypes','immintrin','zmmintrin'])
+     functions = ['access', '_access', 'clock', 'drand48', 'getcwd', '_getcwd', 'getdomainname', 'gethostname',
+-                 'gettimeofday', 'getwd', 'memalign', 'memmove', 'mkstemp', 'popen', 'PXFGETARG', 'rand', 'getpagesize',
++                 'gettimeofday', 'getwd', 'memalign', 'mkstemp', 'popen', 'PXFGETARG', 'rand', 'getpagesize',
+                  'readlink', 'realpath',  'sigaction', 'signal', 'sigset', 'usleep', 'sleep', '_sleep', 'socket',
+                  'times', 'gethostbyname', 'uname','snprintf','_snprintf','lseek','_lseek','time','fork','stricmp',
+                  'strcasecmp', 'bzero', 'dlopen', 'dlsym', 'dlclose', 'dlerror','get_nprocs','sysctlbyname',
+@@ -890,6 +890,7 @@
+ 
+   def configureWin32(self):
+     '''Win32 non-cygwin specific stuff'''
++    self.addDefine('HAVE_MEMMOVE',1)
+     kernel32=0
+     if self.libraries.add('Kernel32.lib','GetComputerName',prototype='#include <Windows.h>', call='GetComputerName(NULL,NULL);'):
+       self.addDefine('HAVE_WINDOWS_H',1)

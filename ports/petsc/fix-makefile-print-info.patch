@@ -1,6 +1,6 @@
---- a/makefile	Sun Dec 10 07:00:40 2017
-+++ b/makefile	Sun Jan 07 11:13:32 2018
-@@ -88,28 +88,28 @@
+--- a/makefile	Mon Jul 02 17:58:05 2018
++++ b/makefile	Wed Aug 01 10:56:27 2018
+@@ -95,28 +95,28 @@
  	-@echo "Using configuration flags:"
  	-@grep "\#define " ${PETSCCONF_H}
  	-@echo "-----------------------------------------"
@@ -26,7 +26,7 @@
 -	   echo "Using Fortran linker: ${FC_LINKER}";\
 -	   echo "Using Fortran flags: ${FC_LINKER_FLAGS}";\
 -         fi
-+	#-@echo "Using C/C++ compile: ${PETSC_COMPILE}"
++	# -@echo "Using C/C++ compile: ${PETSC_COMPILE}"
 +	# -@if [ "${PETSC_LANGUAGE}" = "CONLY" -a "${MPICC_SHOW}" != "" ]; then \
 +    #          printf  "mpicc -show: %b\n" "${MPICC_SHOW}"; \
 +	#   elif [ "${PETSC_LANGUAGE}" = "CXXONLY" -a "${MPICXX_SHOW}" != "" ]; then \
@@ -50,4 +50,4 @@
 +    #      fi
  	-@echo "-----------------------------------------"
  	-@echo "Using system modules: ${LOADEDMODULES}"
- 	-@echo Using mpi.h: `echo '#include <mpi.h>' > ${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/conf/mpitest.c; ${CPP} ${PETSC_CCPPFLAGS} ${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/conf/mpitest.c |grep 'mpi\.h' |  ( head -1 ; cat > /dev/null )`
+ 	-@TESTDIR=`mktemp -q -d -t petscmpi-XXXXXXXX` && \

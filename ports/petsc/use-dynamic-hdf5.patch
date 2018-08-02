@@ -1,0 +1,8 @@
+--- a/config/BuildSystem/config/packages/hdf5 - Copy.py	Wed Aug 01 15:38:50 2018
++++ b/config/BuildSystem/config/packages/hdf5.py	Wed Aug 01 15:38:10 2018
+@@ -60,4 +60,5 @@
+     config.package.GNUPackage.configureLibrary(self)
+     if self.libraries.check(self.dlib, 'H5Pset_fapl_mpio'):
+       self.addDefine('HAVE_H5PSET_FAPL_MPIO', 1)
++    self.framework.addDefine('H5_BUILT_AS_DYNAMIC_LIB', 1)
+     return
