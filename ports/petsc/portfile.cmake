@@ -31,6 +31,8 @@ to_msys_path("${CURRENT_INSTALLED_DIR}"           VCPKG_INSTALL_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/include"   VCPKG_INSTALL_INCLUDE_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/lib"       VCPKG_INSTALL_RELEASE_LIB_DIR)
 to_msys_path("${CURRENT_INSTALLED_DIR}/debug/lib" VCPKG_INSTALL_DEBUG_LIB_DIR)
+to_msys_path("${CURRENT_INSTALLED_DIR}/bin"       VCPKG_INSTALL_RELEASE_BIN_DIR)
+to_msys_path("${CURRENT_INSTALLED_DIR}/debug/bin" VCPKG_INSTALL_DEBUG_BIN_DIR)
 
 # Extract the source code with `7z`
 # We can not use vcpkg_extract_source_archive here, since the archive
@@ -241,6 +243,7 @@ file(MAKE_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel)
 vcpkg_execute_required_process(
     COMMAND ${BASH} --noprofile --norc "${CMAKE_CURRENT_LIST_DIR}\\build.sh"
         "${SOURCE_PATH}" # BUILD DIR : In source build
+        "${VCPKG_INSTALL_RELEASE_BIN_DIR}"
         ${OPTIONS} ${OPTIONS_RELEASE}
     WORKING_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel
     LOGNAME build-${TARGET_TRIPLET}-rel
@@ -251,6 +254,7 @@ file(MAKE_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg)
 vcpkg_execute_required_process(
     COMMAND ${BASH} --noprofile --norc "${CMAKE_CURRENT_LIST_DIR}\\build.sh"
         "${SOURCE_PATH}" # BUILD DIR : In source build
+        "${VCPKG_INSTALL_DEBUG_BIN_DIR}"
         ${OPTIONS} ${OPTIONS_DEBUG}
     WORKING_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg
     LOGNAME build-${TARGET_TRIPLET}-dbg
