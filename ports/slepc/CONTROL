@@ -1,4 +1,4 @@
 Source: slepc
-Version: 3.9.0
+Version: 3.9.2
 Description: Scalable Library for Eigenvalue Problem Computations
 Build-Depends: petsc

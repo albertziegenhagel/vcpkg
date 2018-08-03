@@ -1,8 +1,8 @@
 diff --git a/makefile b/makefile
-index e7c1c9038..b7e2921c4 100644
+index 8fca9f264..c27b63b7e 100644
 --- a/makefile
 +++ b/makefile
-@@ -92,21 +92,21 @@ info: chk_makej
+@@ -95,21 +95,21 @@ info:
  	-@echo "Using SLEPc configuration flags:"
  	-@grep "\#define " ${SLEPCCONF_H}
  	-@echo "-----------------------------------------"
@@ -32,5 +32,5 @@ index e7c1c9038..b7e2921c4 100644
  	   echo "Using Fortran linker: ${FC_LINKER}";\
  	   echo "Using Fortran flags: ${FC_LINKER_FLAGS}";\
 -- 
-2.15.1.windows.2
+2.18.0.windows.1
 

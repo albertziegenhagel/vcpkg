@@ -1842,7 +1842,7 @@ index a1054dd3e..83f830c82 100644
  #endif
  
 diff --git a/include/slepcnep.h b/include/slepcnep.h
-index 3a226e91e..da9d808d0 100644
+index eec755441..aa6cd7691 100644
 --- a/include/slepcnep.h
 +++ b/include/slepcnep.h
 @@ -17,7 +17,7 @@
@@ -1890,7 +1890,7 @@ index 3a226e91e..da9d808d0 100644
  
  /*E
      NEPConv - Determines the convergence test
-@@ -152,155 +152,155 @@ typedef enum {/* converged */
+@@ -152,139 +152,139 @@ typedef enum {/* converged */
                      /* unused                  = -3 */
                NEP_DIVERGED_LINEAR_SOLVE        = -4,
                NEP_CONVERGED_ITERATING          =  0} NEPConvergedReason;
@@ -2107,13 +2107,26 @@ index 3a226e91e..da9d808d0 100644
 -PETSC_EXTERN PetscErrorCode NEPRIIGetConstCorrectionTol(NEP,PetscBool*);
 -PETSC_EXTERN PetscErrorCode NEPRIISetKSP(NEP,KSP);
 -PETSC_EXTERN PetscErrorCode NEPRIIGetKSP(NEP,KSP*);
--
++SLEPC_EXTERN PetscErrorCode NEPRIISetMaximumIterations(NEP,PetscInt);
++SLEPC_EXTERN PetscErrorCode NEPRIIGetMaximumIterations(NEP,PetscInt*);
++SLEPC_EXTERN PetscErrorCode NEPRIISetLagPreconditioner(NEP,PetscInt);
++SLEPC_EXTERN PetscErrorCode NEPRIIGetLagPreconditioner(NEP,PetscInt*);
++SLEPC_EXTERN PetscErrorCode NEPRIISetConstCorrectionTol(NEP,PetscBool);
++SLEPC_EXTERN PetscErrorCode NEPRIIGetConstCorrectionTol(NEP,PetscBool*);
++SLEPC_EXTERN PetscErrorCode NEPRIISetKSP(NEP,KSP);
++SLEPC_EXTERN PetscErrorCode NEPRIIGetKSP(NEP,KSP*);
+ 
 -PETSC_EXTERN PetscErrorCode NEPSLPSetEPS(NEP,EPS);
 -PETSC_EXTERN PetscErrorCode NEPSLPGetEPS(NEP,EPS*);
--
++SLEPC_EXTERN PetscErrorCode NEPSLPSetEPS(NEP,EPS);
++SLEPC_EXTERN PetscErrorCode NEPSLPGetEPS(NEP,EPS*);
+ 
 -PETSC_EXTERN PetscErrorCode NEPNArnoldiSetKSP(NEP,KSP);
 -PETSC_EXTERN PetscErrorCode NEPNArnoldiGetKSP(NEP,KSP*);
--
++SLEPC_EXTERN PetscErrorCode NEPNArnoldiSetKSP(NEP,KSP);
++SLEPC_EXTERN PetscErrorCode NEPNArnoldiGetKSP(NEP,KSP*);
+ 
+ #if defined(PETSC_USE_COMPLEX)
 -PETSC_EXTERN PetscErrorCode NEPCISSSetSizes(NEP,PetscInt,PetscInt,PetscInt,PetscInt,PetscInt,PetscBool);
 -PETSC_EXTERN PetscErrorCode NEPCISSGetSizes(NEP,PetscInt*,PetscInt*,PetscInt*,PetscInt*,PetscInt*,PetscBool*);
 -PETSC_EXTERN PetscErrorCode NEPCISSSetThreshold(NEP,PetscReal,PetscReal);
@@ -2121,7 +2134,20 @@ index 3a226e91e..da9d808d0 100644
 -PETSC_EXTERN PetscErrorCode NEPCISSSetRefinement(NEP,PetscInt,PetscInt);
 -PETSC_EXTERN PetscErrorCode NEPCISSGetRefinement(NEP,PetscInt*,PetscInt*);
 -PETSC_EXTERN PetscErrorCode NEPCISSGetKSPs(NEP,PetscInt*,KSP**);
--
++SLEPC_EXTERN PetscErrorCode NEPCISSSetSizes(NEP,PetscInt,PetscInt,PetscInt,PetscInt,PetscInt,PetscBool);
++SLEPC_EXTERN PetscErrorCode NEPCISSGetSizes(NEP,PetscInt*,PetscInt*,PetscInt*,PetscInt*,PetscInt*,PetscBool*);
++SLEPC_EXTERN PetscErrorCode NEPCISSSetThreshold(NEP,PetscReal,PetscReal);
++SLEPC_EXTERN PetscErrorCode NEPCISSGetThreshold(NEP,PetscReal*,PetscReal*);
++SLEPC_EXTERN PetscErrorCode NEPCISSSetRefinement(NEP,PetscInt,PetscInt);
++SLEPC_EXTERN PetscErrorCode NEPCISSGetRefinement(NEP,PetscInt*,PetscInt*);
++SLEPC_EXTERN PetscErrorCode NEPCISSGetKSPs(NEP,PetscInt*,KSP**);
+ #else
+ #define SlepcNEPCISSUnavailable(nep) do { \
+     PetscFunctionBegin; \
+@@ -300,22 +300,22 @@ PETSC_STATIC_INLINE PetscErrorCode NEPCISSGetKSPs(NEP nep,PETSC_UNUSED PetscInt
+ #undef SlepcNEPCISSUnavailable
+ #endif
+ 
 -PETSC_EXTERN PetscErrorCode NEPInterpolSetPEP(NEP,PEP);
 -PETSC_EXTERN PetscErrorCode NEPInterpolGetPEP(NEP,PEP*);
 -PETSC_EXTERN PetscErrorCode NEPInterpolSetInterpolation(NEP,PetscReal,PetscInt);
@@ -2138,29 +2164,6 @@ index 3a226e91e..da9d808d0 100644
 -PETSC_EXTERN PetscErrorCode NEPNLEIGSSetRKShifts(NEP,PetscInt,PetscScalar*);
 -PETSC_EXTERN PetscErrorCode NEPNLEIGSGetRKShifts(NEP,PetscInt*,PetscScalar**);
 -PETSC_EXTERN PetscErrorCode NEPNLEIGSGetKSPs(NEP,PetscInt*,KSP**);
-+SLEPC_EXTERN PetscErrorCode NEPRIISetMaximumIterations(NEP,PetscInt);
-+SLEPC_EXTERN PetscErrorCode NEPRIIGetMaximumIterations(NEP,PetscInt*);
-+SLEPC_EXTERN PetscErrorCode NEPRIISetLagPreconditioner(NEP,PetscInt);
-+SLEPC_EXTERN PetscErrorCode NEPRIIGetLagPreconditioner(NEP,PetscInt*);
-+SLEPC_EXTERN PetscErrorCode NEPRIISetConstCorrectionTol(NEP,PetscBool);
-+SLEPC_EXTERN PetscErrorCode NEPRIIGetConstCorrectionTol(NEP,PetscBool*);
-+SLEPC_EXTERN PetscErrorCode NEPRIISetKSP(NEP,KSP);
-+SLEPC_EXTERN PetscErrorCode NEPRIIGetKSP(NEP,KSP*);
-+
-+SLEPC_EXTERN PetscErrorCode NEPSLPSetEPS(NEP,EPS);
-+SLEPC_EXTERN PetscErrorCode NEPSLPGetEPS(NEP,EPS*);
-+
-+SLEPC_EXTERN PetscErrorCode NEPNArnoldiSetKSP(NEP,KSP);
-+SLEPC_EXTERN PetscErrorCode NEPNArnoldiGetKSP(NEP,KSP*);
-+
-+SLEPC_EXTERN PetscErrorCode NEPCISSSetSizes(NEP,PetscInt,PetscInt,PetscInt,PetscInt,PetscInt,PetscBool);
-+SLEPC_EXTERN PetscErrorCode NEPCISSGetSizes(NEP,PetscInt*,PetscInt*,PetscInt*,PetscInt*,PetscInt*,PetscBool*);
-+SLEPC_EXTERN PetscErrorCode NEPCISSSetThreshold(NEP,PetscReal,PetscReal);
-+SLEPC_EXTERN PetscErrorCode NEPCISSGetThreshold(NEP,PetscReal*,PetscReal*);
-+SLEPC_EXTERN PetscErrorCode NEPCISSSetRefinement(NEP,PetscInt,PetscInt);
-+SLEPC_EXTERN PetscErrorCode NEPCISSGetRefinement(NEP,PetscInt*,PetscInt*);
-+SLEPC_EXTERN PetscErrorCode NEPCISSGetKSPs(NEP,PetscInt*,KSP**);
-+
 +SLEPC_EXTERN PetscErrorCode NEPInterpolSetPEP(NEP,PEP);
 +SLEPC_EXTERN PetscErrorCode NEPInterpolGetPEP(NEP,PEP*);
 +SLEPC_EXTERN PetscErrorCode NEPInterpolSetInterpolation(NEP,PetscReal,PetscInt);
@@ -3094,7 +3097,7 @@ index 727234858..f931222e7 100644
  
  #endif
 diff --git a/include/slepcsys.h b/include/slepcsys.h
-index 94bd5c8ba..5a442dd93 100644
+index 96b4365c3..4261bc070 100644
 --- a/include/slepcsys.h
 +++ b/include/slepcsys.h
 @@ -21,6 +21,8 @@
@@ -3147,8 +3150,8 @@ index 94bd5c8ba..5a442dd93 100644
 -PETSC_EXTERN PetscBool SlepcInitializeCalled;
 +SLEPC_EXTERN PetscBool SlepcInitializeCalled;
  
- #endif
- 
+ #if defined(PETSC_USE_COMPLEX)
+ #define SlepcLogFlopsComplex(a) PetscLogFlops((a))
 diff --git a/include/slepcvec.h b/include/slepcvec.h
 index ecadd577a..4eb4ed238 100644
 --- a/include/slepcvec.h
@@ -4434,7 +4437,7 @@ index 862f04e00..16fca8316 100644
    PetscErrorCode ierr;
    NEP_INTERPOL   *ctx;
 diff --git a/src/nep/impls/narnoldi/narnoldi.c b/src/nep/impls/narnoldi/narnoldi.c
-index c11ecc522..87134e827 100644
+index 3f31fe45c..354f43cee 100644
 --- a/src/nep/impls/narnoldi/narnoldi.c
 +++ b/src/nep/impls/narnoldi/narnoldi.c
 @@ -299,7 +299,7 @@ PetscErrorCode NEPDestroy_NArnoldi(NEP nep)
@@ -4950,7 +4953,7 @@ index c45722e67..61d2a3c23 100644
  
     Level: developer
 diff --git a/src/pep/impls/jd/pjd.c b/src/pep/impls/jd/pjd.c
-index eb99afe68..2452891c7 100644
+index ad330cafd..026a4bf66 100644
 --- a/src/pep/impls/jd/pjd.c
 +++ b/src/pep/impls/jd/pjd.c
 @@ -1348,7 +1348,7 @@ PetscErrorCode PEPDestroy_JD(PEP pep)
@@ -4989,10 +4992,10 @@ index 1ac34896f..6cf022d6c 100644
    PetscReal *oshifts;
    PetscInt  *oinertias;
 diff --git a/src/pep/impls/krylov/stoar/stoar.c b/src/pep/impls/krylov/stoar/stoar.c
-index fa8f50a5c..3746e7326 100644
+index aa9760b6c..fb53553fa 100644
 --- a/src/pep/impls/krylov/stoar/stoar.c
 +++ b/src/pep/impls/krylov/stoar/stoar.c
-@@ -838,7 +838,7 @@ PetscErrorCode PEPDestroy_STOAR(PEP pep)
+@@ -837,7 +837,7 @@ PetscErrorCode PEPDestroy_STOAR(PEP pep)
    PetscFunctionReturn(0);
  }
  
@@ -5959,10 +5962,10 @@ index ec8170778..0fa4a44df 100644
    PetscErrorCode ierr;
    BV_MAT         *ctx;
 diff --git a/src/sys/classes/bv/impls/svec/svec.c b/src/sys/classes/bv/impls/svec/svec.c
-index bef6f509d..c44f3e008 100644
+index 6c7464348..bf734766a 100644
 --- a/src/sys/classes/bv/impls/svec/svec.c
 +++ b/src/sys/classes/bv/impls/svec/svec.c
-@@ -418,7 +418,7 @@ PetscErrorCode BVDestroy_Svec(BV bv)
+@@ -419,7 +419,7 @@ PetscErrorCode BVDestroy_Svec(BV bv)
    PetscFunctionReturn(0);
  }
  
@@ -5972,10 +5975,10 @@ index bef6f509d..c44f3e008 100644
    PetscErrorCode    ierr;
    BV_SVEC           *ctx;
 diff --git a/src/sys/classes/bv/impls/tensor/bvtensor.c b/src/sys/classes/bv/impls/tensor/bvtensor.c
-index bf4e78b3f..0401eafdc 100644
+index ac860d795..6b4b2b52e 100644
 --- a/src/sys/classes/bv/impls/tensor/bvtensor.c
 +++ b/src/sys/classes/bv/impls/tensor/bvtensor.c
-@@ -838,7 +838,7 @@ PetscErrorCode BVDestroy_Tensor(BV bv)
+@@ -824,7 +824,7 @@ PetscErrorCode BVDestroy_Tensor(BV bv)
    PetscFunctionReturn(0);
  }
  
@@ -6142,10 +6145,10 @@ index aca136a89..aed8762c8 100644
    PetscFunctionBegin;
    ds->ops->allocate      = DSAllocate_HEP;
 diff --git a/src/sys/classes/ds/impls/nep/dsnep.c b/src/sys/classes/ds/impls/nep/dsnep.c
-index 9e9360a3c..25ab626d1 100644
+index 72ae244c3..15e892f08 100644
 --- a/src/sys/classes/ds/impls/nep/dsnep.c
 +++ b/src/sys/classes/ds/impls/nep/dsnep.c
-@@ -460,7 +460,7 @@ PetscErrorCode DSDestroy_NEP(DS ds)
+@@ -461,7 +461,7 @@ PetscErrorCode DSDestroy_NEP(DS ds)
    PetscFunctionReturn(0);
  }
  
@@ -6336,7 +6339,7 @@ index 9419f0a95..b254c8fb9 100644
    PetscErrorCode ierr;
    FN_COMBINE     *ctx;
 diff --git a/src/sys/classes/fn/impls/exp/fnexp.c b/src/sys/classes/fn/impls/exp/fnexp.c
-index b63d40a67..a27dcf9e6 100644
+index b3001f180..11b402150 100644
 --- a/src/sys/classes/fn/impls/exp/fnexp.c
 +++ b/src/sys/classes/fn/impls/exp/fnexp.c
 @@ -1183,7 +1183,7 @@ PetscErrorCode FNView_Exp(FN fn,PetscViewer viewer)
@@ -6976,21 +6979,23 @@ index c0ded3424..1716ce46e 100644
  {
    PetscErrorCode ierr;
 diff --git a/src/sys/ftn-custom/zslepc_start.c b/src/sys/ftn-custom/zslepc_start.c
-index 096270972..b2f9d449b 100644
+index e45cf328d..f77391814 100644
 --- a/src/sys/ftn-custom/zslepc_start.c
 +++ b/src/sys/ftn-custom/zslepc_start.c
-@@ -26,8 +26,8 @@
- #define slepcinitializenoarguments_   slepcinitializenoarguments
+@@ -30,9 +30,9 @@
+ #define slepcfinalize_                slepcfinalize
  #endif
  
 -PETSC_EXTERN void PETSC_STDCALL petscinitialize_(char *filename PETSC_MIXED_LEN(len),PetscErrorCode *ierr PETSC_END_LEN(len));
 -PETSC_EXTERN void PETSC_STDCALL petscinitializenoarguments_(PetscErrorCode *ierr);
+-PETSC_EXTERN void PETSC_STDCALL petscfinalize_(PetscErrorCode *ierr);
 +SLEPC_EXTERN void PETSC_STDCALL petscinitialize_(char *filename PETSC_MIXED_LEN(len),PetscErrorCode *ierr PETSC_END_LEN(len));
 +SLEPC_EXTERN void PETSC_STDCALL petscinitializenoarguments_(PetscErrorCode *ierr);
++SLEPC_EXTERN void PETSC_STDCALL petscfinalize_(PetscErrorCode *ierr);
  
  /*
      SlepcInitialize - Version called from Fortran.
-@@ -74,12 +74,12 @@ static void slepcinitialize_internal(char *filename,PetscInt len,PetscBool argum
+@@ -79,17 +79,17 @@ static void slepcinitialize_internal(char *filename,PetscInt len,PetscBool argum
    if (*ierr) { (*PetscErrorPrintf)("SlepcInitialize:Calling PetscInfo()");return; }
  }
  
@@ -7005,6 +7010,12 @@ index 096270972..b2f9d449b 100644
  {
    slepcinitialize_internal(NULL,(PetscInt)0,PETSC_FALSE,ierr);
  }
+ 
+-PETSC_EXTERN void PETSC_STDCALL slepcfinalize_(PetscErrorCode *ierr)
++SLEPC_EXTERN void PETSC_STDCALL slepcfinalize_(PetscErrorCode *ierr)
+ {
+   *ierr = PetscInfo(0,"SlepcFinalize called from Fortran\n");
+   if (*ierr) { (*PetscErrorPrintf)("SlepcFinalize:Calling PetscInfo()");return; }
 diff --git a/src/sys/ftn-custom/zslepc_startf.c b/src/sys/ftn-custom/zslepc_startf.c
 index af71c45f4..4cd94e5b8 100644
 --- a/src/sys/ftn-custom/zslepc_startf.c
@@ -7061,7 +7072,7 @@ index 7c58b30cf..f672e766a 100644
    CHKFORTRANNULLINTEGER(major);
    CHKFORTRANNULLINTEGER(minor);
 diff --git a/src/sys/slepcinit.c b/src/sys/slepcinit.c
-index 4eee339ba..55ed73d46 100644
+index 3557ab8a1..be07f0ebf 100644
 --- a/src/sys/slepcinit.c
 +++ b/src/sys/slepcinit.c
 @@ -323,8 +323,6 @@ PetscErrorCode SlepcInitialized(PetscBool *isInitialized)
@@ -7096,5 +7107,5 @@ index 05f58847a..9042babdf 100644
    PetscErrorCode ierr;
  
 -- 
-2.16.3.windows.1
+2.18.0.windows.1
 

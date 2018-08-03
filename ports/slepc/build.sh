@@ -12,6 +12,10 @@ pacman -Sy --noconfirm --needed diffutils make python2
 
 PATH_TO_BUILD_DIR="`cygpath "$1"`"
 shift
+VCPKG_INSTALL_BIN_DIR="`cygpath "$1"`"
+shift
+
+export PATH=$VCPKG_INSTALL_BIN_DIR:$PATH
 
 cd "$PATH_TO_BUILD_DIR"
 echo "=== CONFIGURING ==="

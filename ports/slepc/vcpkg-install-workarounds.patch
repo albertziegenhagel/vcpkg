@@ -15,7 +15,7 @@ index 0a4212a9e..2a76e3776 100755
                  define = line[len('#define '):]
                  space = define.find(' ')
 diff --git a/config/packages/petsc.py b/config/packages/petsc.py
-index e89779e15..2b2807f51 100644
+index 195976c78..709609850 100644
 --- a/config/packages/petsc.py
 +++ b/config/packages/petsc.py
 @@ -32,8 +32,11 @@ class PETSc(package.Package):
@@ -39,7 +39,7 @@ index e89779e15..2b2807f51 100644
      if 'PETSC_ARCH' in os.environ and os.environ['PETSC_ARCH']:
        self.isinstall = False
        self.arch = os.environ['PETSC_ARCH']
-@@ -71,6 +75,9 @@ class PETSc(package.Package):
+@@ -73,6 +77,9 @@ class PETSc(package.Package):
        self.isinstall = True
        petscvariables = os.path.join(self.dir,'lib','petsc','conf','petscvariables')
        petscconf_h = os.path.join(self.dir,'include','petscconf.h')
@@ -49,7 +49,7 @@ index e89779e15..2b2807f51 100644
  
      self.buildsharedlib = False
      self.build_using_cmake = 0
-@@ -162,6 +169,10 @@ class PETSc(package.Package):
+@@ -164,3 +171,7 @@ class PETSc(package.Package):
        else:
          self.log.Exit('ERROR: cannot process file ' + petscconf_h)
  
@@ -57,9 +57,6 @@ index e89779e15..2b2807f51 100644
 +      self.debug = True
 +      self.arch = self.arch.replace("opt", 'debug')
 +
-     # empty PETSC_ARCH, guess an arch name
-     if self.isinstall and not self.arch:
-       self.arch = 'arch-' + sys.platform.replace('cygwin','mswin')+ '-' + self.language
 -- 
-2.15.1.windows.2
+2.18.0.windows.1
 

@@ -1,12 +1,10 @@
 include(vcpkg_common_functions)
-# set(SLEPC_VERSION 3.8.2)
-set(SLEPC_VERSION 3.9.0)
+set(SLEPC_VERSION 3.9.2)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/slepc-${SLEPC_VERSION})
 vcpkg_download_distfile(ARCHIVE
     URLS "http://slepc.upv.es/download/distrib/slepc-${SLEPC_VERSION}.tar.gz"
     FILENAME "slepc-${SLEPC_VERSION}.tar.gz"
-    # SHA512 4d2cbcdd9ecc5e7fca10df85c0248874f379df4c7c5f6158e6896e9d5beced69c8755baf706418cd46dc2a82872a916d244b92b9fef4a7d6e8213d4899729a3e
-    SHA512 490403e42a2f02f56db7a9edda1c6f4d7454f6c14645ee12511a8a0551de5ea238d39dde4a5b854f82cc161582c73a5bf392b07c9161bb9a89e600ad53e28909
+    SHA512 ef06c478ab38850101b9e18ffd6bf1feff58c93634cef7a3814f7ee4c1c538ee2075c2553fbd984219a98451cf52f2035ee4d2f713397cb54338bacf62e4972d
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
@@ -39,6 +37,8 @@ endmacro()
 to_msys_path("${CURRENT_PACKAGES_DIR}"            MSYS_PACKAGES_DIR)
 to_msys_path("${SOURCE_PATH}"                     MSYS_SOURCE_PATH)
 to_msys_path("${CURRENT_INSTALLED_DIR}"           VCPKG_INSTALL_DIR)
+to_msys_path("${CURRENT_INSTALLED_DIR}/bin"       VCPKG_INSTALL_RELEASE_BIN_DIR)
+to_msys_path("${CURRENT_INSTALLED_DIR}/debug/bin" VCPKG_INSTALL_DEBUG_BIN_DIR)
 
 vcpkg_enable_fortran()
 
@@ -60,6 +60,7 @@ set(ENV{PETSC_DIR} "${VCPKG_INSTALL_DIR}")
 vcpkg_execute_required_process(
     COMMAND ${BASH} --noprofile --norc "${CMAKE_CURRENT_LIST_DIR}\\build.sh"
         "${SOURCE_PATH}" # BUILD DIR : In source build
+        "${VCPKG_INSTALL_RELEASE_BIN_DIR}"
         ${OPTIONS} ${OPTIONS_RELEASE}
     WORKING_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-rel
     LOGNAME build-${TARGET_TRIPLET}-rel
@@ -71,6 +72,7 @@ set(ENV{PETSC_DIR} "${VCPKG_INSTALL_DIR}/debug")
 vcpkg_execute_required_process(
     COMMAND ${BASH} --noprofile --norc "${CMAKE_CURRENT_LIST_DIR}\\build.sh"
         "${SOURCE_PATH}" # BUILD DIR : In source build
+        "${VCPKG_INSTALL_DEBUG_BIN_DIR}"
         ${OPTIONS} ${OPTIONS_DEBUG}
     WORKING_DIRECTORY ${CURRENT_BUILDTREES_DIR}/${TARGET_TRIPLET}-dbg
     LOGNAME build-${TARGET_TRIPLET}-dbg
